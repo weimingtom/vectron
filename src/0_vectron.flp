@@ -1,0 +1,25 @@
+﻿<flash_project name="0_vectron" version="1">
+    <project_folder name="aaObjects" expanded="true">
+        <project_file path="./Wall.as" filetype="as" />
+        <project_file path="./Spawn.as" filetype="as" />
+        <project_file path="./Zone.as" filetype="as" />
+        <project_file path="./AamapObjectInterface.as" filetype="as" />
+        <project_file path="./AamapObject.as" filetype="as" />
+    </project_folder>
+    <project_folder name="tools" expanded="true">
+        <project_file path="./ToolZone.as" filetype="as" />
+        <project_file path="./ToolInterface.as" filetype="as" />
+        <project_file path="./ToolBase.as" filetype="as" />
+        <project_file path="./ToolWall.as" filetype="as" />
+    </project_folder>
+    <project_folder name="orfaust" expanded="true">
+        <project_file path="./orfaust/ProgBar.as" filetype="as" />
+        <project_file path="./orfaust/Monitor.as" filetype="as" />
+    </project_folder>
+    <project_file path="./root.fla" filetype="fla" profile="" />
+    <project_file path="./Root.as" filetype="as" />
+    <project_file path="./home.fla" filetype="fla" profile="" />
+    <project_file path="./Home.as" filetype="as" />
+    <project_file path="./Base.as" filetype="as" />
+    <project_file path="./Aamap.as" filetype="as" />
+</flash_project>
