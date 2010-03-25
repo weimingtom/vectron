@@ -173,13 +173,14 @@ package
 		private function onToolClick(e:MouseEvent):void
 		{
 			var selected = e.target;
-			if(selected == _tool || selected == toolBar)
+			if(selected == _tool || selected == toolBar || selected == toolBar.overlay)
 				return;
 
 			_tool.close();
 			removeToolListeners();
 
 			_tool = selected;
+			toolBar.overlay.x = selected.x;
 			addToolListeners();
 		}
 
@@ -338,7 +339,7 @@ package
 		private function objectClick(e:CustomEvent):void
 		{
 			var obj = e.data as AamapObject;
-			//obj.selected = !obj.selected;
+			obj.selected = !obj.selected;
 		}
 
 		private function objectDragStart(e:CustomEvent):void
