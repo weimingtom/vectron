@@ -42,7 +42,7 @@ package
 		{
 			if(_wall == null)
 			{
-				_wall = new Wall(mouse);
+				_wall = new Wall(mouse,_aamap);
 				dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_wall));
 
 				_wall.appendPoint(mouse);

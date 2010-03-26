@@ -41,8 +41,10 @@ package
 		private var _points:List = new List;
 		private var _lastSeg:Object;
 
-		public function Wall(mouse:Point):void
+		public function Wall(mouse:Point,aamap:Aamap):void
 		{
+			super(aamap);
+
 			var a = mouse;
 			_points.push(a);
 		}
@@ -74,6 +76,12 @@ package
 			_lastSeg = {a:a,b:b,sprite:segment};
 			renderLastSeg();
 		}
+
+		public function storePoint(mouse:Point):void
+		{
+			_points.push(mouse);
+		}
+		
 		public function storeLastPoint():void
 		{
 			if(!_lastSeg)
@@ -100,7 +108,8 @@ package
 				sprite.graphics.lineTo(b.x,b.y);
 			}
 		}
-			override public function render():void
+
+		override public function render():void
 		{
 			// draw selectable area
 
@@ -119,17 +128,17 @@ package
 			}
 
 			// draw visible object
-			it = _points.iterator;
+			var jit = _points.iterator;
 
 			graphics.lineStyle(1,0,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
-			graphics.moveTo(it.data.x,it.data.y);
+			graphics.moveTo(jit.data.x,jit.data.y);
 
-			it.next();
+			jit.next();
 
-			while(!it.end)
+			while(!jit.end)
 			{
-				graphics.lineTo(it.data.x,it.data.y);
-				it.next();
+				graphics.lineTo(jit.data.x,jit.data.y);
+				jit.next();
 			}
 		}
 

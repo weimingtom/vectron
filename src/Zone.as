@@ -42,8 +42,10 @@ package
 
 		private const COLOR_DEATH = Utils.getColor(1,0,0);
 
-		public function Zone(center:Point,rad:Number):void
+		public function Zone(center:Point,rad:Number,aamap):void
 		{
+			super(aamap);
+
 			_center = center;
 			_radius = rad;
 			render();

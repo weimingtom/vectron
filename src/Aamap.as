@@ -34,6 +34,7 @@ package
 
 	import orfaust.Debug;
 	import orfaust.CustomEvent;
+	import orfaust.containers.List;
 
 	public class Aamap extends Base
 	{
@@ -97,17 +98,47 @@ package
 
 /* objects creation */
 
+		private var _objects:List = new List;
+
 		public function addObject(obj:AamapObject):void
 		{
+			_objects.push(obj);
 			addChild(obj);
 			obj.addEventListener(MouseEvent.ROLL_OVER,objectRollOver,false,0,true);
 			obj.addEventListener(MouseEvent.ROLL_OUT,objectRollOut,false,0,true);
+		}
+		public function removeObject(obj:AamapObject):void
+		{
+			if(!contains(obj))
+			{
+				error(obj + ' not found in aamap');
+				return;
+			}
+			if(!_objects.find(obj))
+			{
+				error(obj + ' not found in _objects List');
+				return;
+			}
+			
+			obj.removeEventListener(MouseEvent.ROLL_OVER,objectRollOver);
+			obj.removeEventListener(MouseEvent.ROLL_OUT,objectRollOut);
+			removeChild(obj);
+			_objects.remove(obj);
+		}
 
-			/*
-			obj.addEventListener(MouseEvent.CLICK,objectClick,false,0,true);
-			obj.addEventListener(MouseEvent.MOUSE_DOWN,objectDrag,false,0,true);
-			obj.addEventListener(MouseEvent.MOUSE_UP,objectDrag,false,0,true);
-			*/
+		public function get objects():List
+		{
+			//return a clone of _objects to keep the list private
+
+			var list = new List;
+			var it = _objects.iterator;
+			while(!it.end)
+			{
+				list.push(it.data);
+				it.next();
+			}
+
+			return list;
 		}
 
 		private function createObjects():void
@@ -132,7 +163,7 @@ package
 		{
 			var p = new Point(xml.attribute('x'),xml.attribute('y'));
 
-			var zone = new Zone(p,1);
+			var zone = new Zone(p,1,this);
 			addObject(zone);
 		}
 
@@ -143,7 +174,7 @@ package
 			var radius = shape.attribute('radius');
 			var center = new Point(shape.Point.attribute('x'),shape.Point.attribute('y'));
 
-			var zone = new Zone(center,radius);
+			var zone = new Zone(center,radius,this);
 			addObject(zone);
 		}
 
@@ -156,13 +187,11 @@ package
 				var p = new Point(xml.Point[i].attribute('x'),xml.Point[i].attribute('y'));
 
 				if(i == 0)
-					var wall = new Wall(p);
+					var wall = new Wall(p,this);
 				else
-				{
-					wall.appendPoint(p);
-					wall.storeLastPoint();
-				}
+					wall.storePoint(p);
 			}
+			wall.render();
 			addObject(wall);
 		}
 	}

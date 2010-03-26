@@ -32,11 +32,13 @@ package
 
 	import flash.events.Event;
 	import flash.events.MouseEvent;
-	import flash.events.KeyboardEvent;
 	import flash.events.ProgressEvent;
+	import flash.events.KeyboardEvent;
+	import flash.ui.Keyboard;
 
 	import orfaust.Debug;
 	import orfaust.CustomEvent;
+	import orfaust.containers.List;
 
 	public class Home extends Base
 	{
@@ -61,7 +63,7 @@ package
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/race/alba-1.6.aamap.xml';
 			//xmlUrl += 
 
-			//xmlUrl = 'aamap/alba-1.6.aamap.xml';
+			xmlUrl = 'aamap/alba-1.6.aamap.xml';
 			//xmlUrl = 'aamap/diamond-1.0.2.aamap.xml';
 			//xmlUrl = 'aamap/for_old_clients-0.1.0.aamap.xml';
 			//xmlUrl = 'aamap/40-gon-0.2.aamap.xml';
@@ -72,7 +74,7 @@ package
 			//xmlUrl = 'aamap/sumo_8x2-0.1.0.aamap.xml';
 			//xmlUrl = 'aamap/zonetest-0.1.0.aamap.xml';
 			//xmlUrl = 'aamap/inaktek-0.7.2.aamap.xml';
-			xmlUrl = 'aamap/PanormousDeath-1.0.1.aamap.xml';
+			//xmlUrl = 'aamap/PanormousDeath-1.0.1.aamap.xml';
 
 
 			super.loadUrl(xmlUrl,xmlLoaded,loadingProgress);
@@ -87,6 +89,9 @@ package
 			toolBar.addEventListener(MouseEvent.ROLL_OUT,toolBarHover,false,0,true);
 
 			_tool = toolBar.select;
+
+			stage.addEventListener(KeyboardEvent.KEY_DOWN,handleKeyboard,false,0,true);
+			stage.addEventListener(KeyboardEvent.KEY_UP,handleKeyboard,false,0,true);
 		}
 
 
@@ -265,19 +270,23 @@ package
 
 /* editing */
 
+		private var _draggingMap:Boolean = false;
+
 		private function handleStageMouseEvent(e:MouseEvent):void
 		{
 			// drag map
-			if(e.ctrlKey && e.type != MouseEvent.MOUSE_MOVE)
+			if(e.ctrlKey && e.type != MouseEvent.MOUSE_MOVE && !_tool.objectDragging || _draggingMap)
 			{
 				switch(e.type)
 				{
 					case MouseEvent.MOUSE_DOWN:
 						_aamap.startDrag();
+						_draggingMap = true;
 						break;
 
 					case MouseEvent.MOUSE_UP:
 						_aamap.stopDrag();
+						_draggingMap = false;
 						break;
 
 					case MouseEvent.MOUSE_MOVE:
@@ -299,6 +308,31 @@ package
 		private function handleObjectHover(e:CustomEvent):void
 		{
 			_tool.handleObjectMouseHover(e);
+		}
+
+
+		// KEYBOARD
+		private var _keyDown:List = new List;
+
+		private function handleKeyboard(e:KeyboardEvent):void
+		{
+			//Debug.log(e.keyCode);
+			var ch = e.keyCode;
+
+			switch(e.type)
+			{
+				case KeyboardEvent.KEY_DOWN:
+					if(!_keyDown.find(ch))
+						_keyDown.push(ch);
+
+					break;
+
+				case KeyboardEvent.KEY_UP:
+					_keyDown.remove(ch);
+
+					break;
+			}
+			_tool.handleKeyboard(_keyDown);
 		}
 
 

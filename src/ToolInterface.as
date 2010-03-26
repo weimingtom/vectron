@@ -30,12 +30,16 @@ package
 	import flash.geom.Point;
 
 	import orfaust.CustomEvent;
+	import orfaust.containers.List;
 
 	public interface ToolInterface extends IEventDispatcher
 	{
 		function handleMouse(e:MouseEvent,aamap:Aamap):void;
 		function handleObjectMouseEvent(e:MouseEvent,cursor:Point):void;
 		function handleObjectMouseHover(e:CustomEvent):void;
+		function handleKeyboard(keyList:List):void;
+
 		function close():void;
+		function get objectDragging():Boolean
 	}
 }

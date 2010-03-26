@@ -51,7 +51,7 @@ package
 			}
 
 			_a = mouse;
-			_zone = new Zone(mouse,defaultRadius);
+			_zone = new Zone(mouse,defaultRadius,_aamap);
 			dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_zone));
 		}
 		override protected function mouseUp(mouse:Point,keys:Object):void

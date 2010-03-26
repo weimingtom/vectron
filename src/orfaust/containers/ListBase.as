@@ -100,7 +100,10 @@ package orfaust.containers
 		// FIND NODE
 		protected function findNode(data:*):Object
 		{
-			check();
+			//check();
+			if(_size == 0)
+				return null;
+
 			var tmp = _head;
 			while(tmp)
 			{

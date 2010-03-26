@@ -45,7 +45,7 @@ package orfaust.containers
 		// FIND
 		public function find(data:*):Boolean
 		{
-			check('List');
+			//check('List');
 			return(findNode(data) != null);
 		}
 

@@ -31,13 +31,20 @@ package
 
 	import orfaust.Debug;
 	import orfaust.CustomEvent;
+	import orfaust.containers.List;
 
 	public class ToolBase extends SimpleButton implements ToolInterface
 	{
 		protected var _mouseDown:Boolean = false;
+		protected var _mouseOverObject:Boolean = false;
+		protected var _dragStart:Point;
+		protected var _selected:List;
+
+		protected var _aamap:Aamap;
 
 		public function handleMouse(e:MouseEvent,aamap:Aamap):void
 		{
+			_aamap = aamap;
 			var X = aamap.mouseX;
 			var Y = aamap.mouseY;
 			
@@ -73,7 +80,7 @@ package
 
 		public function handleObjectMouseHover(e:CustomEvent):void
 		{
-			//e.data.selected = e.type == 'OBJECT_ROLL_OVER';
+			_mouseOverObject = e.type == 'OBJECT_ROLL_OVER';
 		}
 
 		protected function mouseDown(mouse:Point,keys:Object):void
@@ -145,7 +152,9 @@ package
 		}
 
 
-
+		public function handleKeyboard(keyList:List):void
+		{
+		}
 
 
 		public function close():void
@@ -153,6 +162,10 @@ package
 			forceOverride('close()');
 		}
 
+		public function get objectDragging():Boolean
+		{
+			return _dragStart != null;
+		}
 
 /* utils */
 
@@ -169,6 +182,18 @@ package
 			return Math.sqrt(xDist * xDist + yDist * yDist);
 		}
 
+		protected function forEachSelected(callBack:Function):void
+		{
+			if(_selected == null)
+				return;
+
+			var it = _selected.iterator;
+			while(!it.end)
+			{
+				callBack(it.data);
+				it.next();
+			}
+		}
 
 
 /* errors */

@@ -31,17 +31,24 @@ package
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 
+	import flash.ui.Keyboard;
+
 	import orfaust.Debug;
 	import orfaust.containers.List;
 
 	public class ToolSelect extends ToolBase implements ToolInterface
 	{
-		private var _dragStart:Point;
-		private var _selected:List;
-
 		override protected function mouseDown(mouse:Point,keys:Object):void
 		{
-			
+			if(!_mouseOverObject && _selected != null && !keys.shift)
+			{
+				forEachSelected(deselect);
+				function deselect(o:AamapObject)
+				{
+					o.selected = false;
+				}
+				_selected = null;
+			}
 		}
 		override protected function mouseUp(mouse:Point,keys:Object):void
 		{
@@ -52,18 +59,13 @@ package
 			if(_dragStart == null)
 				return;
 
-			var it = _selected.iterator;
-
-			// move each selected objects
-			while(!it.end)
+			forEachSelected(moveObj);
+			function moveObj(obj:AamapObject)
 			{
-				var obj = it.data;
 				var lastPos = obj.lastPos;
 
 				obj.x = lastPos.x + mouse.x - _dragStart.x;
 				obj.y = lastPos.y + mouse.y - _dragStart.y;
-
-				it.next();
 			}
 		}
 
@@ -108,11 +110,10 @@ package
 					}
 					else
 					{
-						var it = _selected.iterator;
-						while(!it.end)
+						forEachSelected(deselect);
+						function deselect(obj:AamapObject)
 						{
-							it.data.selected = false;
-							it.next();
+							obj.selected = false;
 						}
 						_selected = new List;
 						_selected.push(obj);
@@ -123,11 +124,10 @@ package
 
 				if(_selected != null)
 				{
-					it = _selected.iterator;
-					while(!it.end)
+					forEachSelected(dragStart);
+					function dragStart(obj:AamapObject)
 					{
-						it.data.dragStart();
-						it.next();
+						obj.dragStart();
 					}
 				}
 			}
@@ -141,6 +141,31 @@ package
 		{
 		}
 
+		override public function handleKeyboard(keyList:List):void
+		{
+			// remove selected (DELETE)
+			if(keyList.find(Keyboard.DELETE))
+			{
+				forEachSelected(remove);
+				function remove(obj:AamapObject)
+				{
+					obj.remove();
+				}
+				_selected = null;
+			}
+
+			// select all (CTRL + a)
+			else if(keyList.find(Keyboard.CONTROL) && keyList.find(65))
+			{
+				_selected = _aamap.objects;
+
+				forEachSelected(select);
+				function select(obj:AamapObject)
+				{
+					obj.selected = true;
+				}
+			}
+		}
 
 		// CLOSE
 		override public function close():void

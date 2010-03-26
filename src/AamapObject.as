@@ -37,13 +37,20 @@ package
 		protected const SIZE_SELECTED = 7;
 		protected const COLOR_SELECTED = Utils.getColor(.4,.4,1);
 
+		protected var _aamap:Aamap;
+
 		protected var _lastPos:Point;
 
-		public function AamapObject():void
+		public function AamapObject(aamap:Aamap):void
 		{
+			_aamap = aamap;
+
 			_area = new Sprite;
 			_area.alpha = 0;
 			addChild(_area);
+
+			useHandCursor = true;
+			buttonMode = true;
 		}
 
 		public function render():void
@@ -67,6 +74,11 @@ package
 		public function get lastPos():Point
 		{
 			return _lastPos;
+		}
+
+		public function remove():void
+		{
+			_aamap.removeObject(this);
 		}
 	}
 }
