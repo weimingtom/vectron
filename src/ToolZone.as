@@ -36,7 +36,7 @@ package
 
 	public class ToolZone extends ToolBase implements ToolInterface
 	{
-		public var defaultRadius:Number = 100;
+		public var defaultRadius:Number = 50;
 
 		private var _zone:Zone;
 		private var _a:Point;

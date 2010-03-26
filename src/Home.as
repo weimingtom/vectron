@@ -63,7 +63,7 @@ package
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/race/alba-1.6.aamap.xml';
 			//xmlUrl += 
 
-			xmlUrl = 'aamap/alba-1.6.aamap.xml';
+			//xmlUrl = 'aamap/alba-1.6.aamap.xml';
 			//xmlUrl = 'aamap/diamond-1.0.2.aamap.xml';
 			//xmlUrl = 'aamap/for_old_clients-0.1.0.aamap.xml';
 			//xmlUrl = 'aamap/40-gon-0.2.aamap.xml';
@@ -74,7 +74,7 @@ package
 			//xmlUrl = 'aamap/sumo_8x2-0.1.0.aamap.xml';
 			//xmlUrl = 'aamap/zonetest-0.1.0.aamap.xml';
 			//xmlUrl = 'aamap/inaktek-0.7.2.aamap.xml';
-			//xmlUrl = 'aamap/PanormousDeath-1.0.1.aamap.xml';
+			xmlUrl = 'aamap/PanormousDeath-1.0.1.aamap.xml';
 
 
 			super.loadUrl(xmlUrl,xmlLoaded,loadingProgress);
@@ -84,11 +84,11 @@ package
 			stage.addEventListener(Event.RESIZE,onStageResize,false,0,true);
 			onStageResize(null);
 
-			toolBar.addEventListener(MouseEvent.CLICK,onToolClick,false,0,true);
-			toolBar.addEventListener(MouseEvent.ROLL_OVER,toolBarHover,false,0,true);
-			toolBar.addEventListener(MouseEvent.ROLL_OUT,toolBarHover,false,0,true);
+			toolBar.tools.addEventListener(MouseEvent.CLICK,onToolClick,false,0,true);
+			toolBar.tools.addEventListener(MouseEvent.ROLL_OVER,toolBarHover,false,0,true);
+			toolBar.tools.addEventListener(MouseEvent.ROLL_OUT,toolBarHover,false,0,true);
 
-			_tool = toolBar.select;
+			_tool = toolBar.tools.select;
 
 			stage.addEventListener(KeyboardEvent.KEY_DOWN,handleKeyboard,false,0,true);
 			stage.addEventListener(KeyboardEvent.KEY_UP,handleKeyboard,false,0,true);
@@ -183,7 +183,7 @@ package
 			removeToolListeners();
 
 			_tool = selected;
-			toolBar.overlay.x = selected.x;
+			toolBar.overlay.x = toolBar.tools.x + selected.x;
 			addToolListeners();
 		}
 
@@ -193,7 +193,7 @@ package
 			_tool.addEventListener('EDITING_OBJECT_COMPLETE',editingObjectComplete,false,0,true);
 			_tool.addEventListener('REMOVE_EDITING_OBJECT',removeEditingObject,false,0,true);
 
-			if(_tool == toolBar.select)
+			if(_tool == toolBar.tools.select)
 			{
 				_aamap.addEventListener(MouseEvent.MOUSE_DOWN,handleObjectMouseEvent,false,0,true);
 				_aamap.addEventListener(MouseEvent.MOUSE_UP,handleObjectMouseEvent,false,0,true);
@@ -209,7 +209,7 @@ package
 			_tool.removeEventListener('EDITING_OBJECT_COMPLETE',editingObjectComplete);
 			_tool.removeEventListener('REMOVE_EDITING_OBJECT',removeEditingObject);
 
-			if(_tool == toolBar.select)
+			if(_tool == toolBar.tools.select)
 			{
 				_aamap.removeEventListener(MouseEvent.MOUSE_DOWN,handleObjectMouseEvent);
 				_aamap.removeEventListener(MouseEvent.MOUSE_UP,handleObjectMouseEvent);
@@ -347,7 +347,7 @@ package
 				error('editing is not empty');
 			else
 			{
-				toolBar.visible = false;
+				//toolBar.visible = false;
 				_aamap.editing.addChild(e.data);
 			}
 		}
@@ -363,7 +363,7 @@ package
 			{
 				var obj = _aamap.editing.getChildAt(0);
 				_aamap.addObject(obj);
-				toolBar.visible = true;
+				//toolBar.visible = true;
 			}
 		}
 		private function removeEditingObject(e:Event):void
