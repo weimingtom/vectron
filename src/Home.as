@@ -52,8 +52,7 @@ package
 
 		override protected function init():void
 		{
-			var php = 'aamap.php?url=';
-			var xmlUrl = php;
+			var xmlUrl = 'aamap.php?url=';
 
 			//xmlUrl += 'resource.armagetronad.net/
 			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/Crossdeath-1.0.1.aamap.xml';
@@ -61,7 +60,6 @@ package
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/motorace/tester-0.1.aamap.xml';
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/race/alba-1.6.aamap.xml';
 			//xmlUrl += 
-			
 
 			//xmlUrl = 'aamap/alba-1.6.aamap.xml';
 			//xmlUrl = 'aamap/diamond-1.0.2.aamap.xml';
@@ -121,9 +119,9 @@ package
 			factor = _scale - factor;
 
 			_aamap.x -= _cursor.x * factor;
-			_aamap.y -= _cursor.y * factor;
+			_aamap.y -= -_cursor.y * factor;
 
-			setCursor();
+			setInfo();
 		}
 		private function zoomOut():void
 		{
@@ -137,9 +135,9 @@ package
 			factor -= _scale;
 
 			_aamap.x += _cursor.x * factor;
-			_aamap.y += _cursor.y * factor;
+			_aamap.y += -_cursor.y * factor;
 
-			setCursor();
+			setInfo();
 		}
 
 		private function setScale():void
@@ -148,14 +146,14 @@ package
 			_aamap.scaleY = -_scale;
 		}
 
-		private function setCursor():void
+		private function setInfo():void
 		{
 			_cursor.x = (stage.mouseX - _aamap.x) / _scale;
-			_cursor.y = (stage.mouseY - _aamap.y) / _scale;
+			_cursor.y = (-stage.mouseY + _aamap.y) / _scale;
 
 			info.txt.text =
 				'x: ' + _cursor.x.toString() + '\n' + 
-				'y: ' + (-_cursor.y).toString() + '\n' +
+				'y: ' + (_cursor.y).toString() + '\n' +
 				'zoom: ' + Math.floor(_scale * 100).toString() + '%';
 		}
 
@@ -192,9 +190,11 @@ package
 
 			if(_tool == toolBar.select)
 			{
-				_aamap.addEventListener('OBJECT_CLICK',objectClick,false,0,true);
-				_aamap.addEventListener('OBJECT_DRAG_START',objectDragStart,false,0,true);
-				_aamap.addEventListener('OBJECT_DRAG_STOP',objectDragStop,false,0,true);
+				_aamap.addEventListener(MouseEvent.MOUSE_DOWN,handleObjectMouseEvent,false,0,true);
+				_aamap.addEventListener(MouseEvent.MOUSE_UP,handleObjectMouseEvent,false,0,true);
+				_aamap.addEventListener(MouseEvent.MOUSE_MOVE,handleObjectMouseEvent,false,0,true);
+				_aamap.addEventListener('OBJECT_ROLL_OVER',handleObjectHover,false,0,true);
+				_aamap.addEventListener('OBJECT_ROLL_OUT',handleObjectHover,false,0,true);
 			}
 		}
 
@@ -206,9 +206,11 @@ package
 
 			if(_tool == toolBar.select)
 			{
-				_aamap.removeEventListener('OBJECT_CLICK',objectClick);
-				_aamap.removeEventListener('OBJECT_DRAG_START',objectDragStart);
-				_aamap.removeEventListener('OBJECT_DRAG_STOP',objectDragStop);
+				_aamap.removeEventListener(MouseEvent.MOUSE_DOWN,handleObjectMouseEvent);
+				_aamap.removeEventListener(MouseEvent.MOUSE_UP,handleObjectMouseEvent);
+				_aamap.removeEventListener(MouseEvent.MOUSE_MOVE,handleObjectMouseEvent);
+				_aamap.removeEventListener('OBJECT_ROLL_OVER',handleObjectHover);
+				_aamap.removeEventListener('OBJECT_ROLL_OUT',handleObjectHover);
 			}
 		}
 
@@ -247,15 +249,15 @@ package
 
 		private function addMapListeners():void
 		{
-			stage.addEventListener(MouseEvent.MOUSE_DOWN,handleMouse,false,0,true);
-			stage.addEventListener(MouseEvent.MOUSE_UP,handleMouse,false,0,true);
-			stage.addEventListener(MouseEvent.MOUSE_MOVE,handleMouse,false,0,true);
+			stage.addEventListener(MouseEvent.MOUSE_DOWN,handleStageMouseEvent,false,0,true);
+			stage.addEventListener(MouseEvent.MOUSE_UP,handleStageMouseEvent,false,0,true);
+			stage.addEventListener(MouseEvent.MOUSE_MOVE,handleStageMouseEvent,false,0,true);
 		}
 		private function removeMapListeners():void
 		{
-			stage.removeEventListener(MouseEvent.MOUSE_DOWN,handleMouse);
-			stage.removeEventListener(MouseEvent.MOUSE_UP,handleMouse);
-			stage.removeEventListener(MouseEvent.MOUSE_MOVE,handleMouse);
+			stage.removeEventListener(MouseEvent.MOUSE_DOWN,handleStageMouseEvent);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,handleStageMouseEvent);
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,handleStageMouseEvent);
 		}
 
 
@@ -263,7 +265,7 @@ package
 
 /* editing */
 
-		private function handleMouse(e:MouseEvent):void
+		private function handleStageMouseEvent(e:MouseEvent):void
 		{
 			// drag map
 			if(e.ctrlKey && e.type != MouseEvent.MOUSE_MOVE)
@@ -286,9 +288,18 @@ package
 			else
 				_tool.handleMouse(e,_aamap);
 
-			setCursor();
+			setInfo();
 		}
 
+		private function handleObjectMouseEvent(e:MouseEvent):void
+		{
+			_tool.handleObjectMouseEvent(e,_cursor);
+		}
+
+		private function handleObjectHover(e:CustomEvent):void
+		{
+			_tool.handleObjectMouseHover(e);
+		}
 
 
 
@@ -336,10 +347,20 @@ package
 			}
 		}
 
+		/*
 		private function objectClick(e:CustomEvent):void
 		{
 			var obj = e.data as AamapObject;
 			obj.selected = !obj.selected;
+		}
+		*/
+
+		private function objectClick(e:MouseEvent):void
+		{
+			/*
+			var obj = e.target.parent as AamapObject;
+			obj.selected = !obj.selected;
+			*/
 		}
 
 		private function objectDragStart(e:CustomEvent):void

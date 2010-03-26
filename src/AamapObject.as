@@ -26,14 +26,18 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 package
 {
 	import flash.display.Sprite;
+	import flash.geom.Point;
 
 	import orfaust.Debug;
+	import orfaust.Utils;
 
 	public class AamapObject extends Sprite implements AamapObjectInterface
 	{
 		protected var _area:Sprite;
-		protected const SIZE_SELECTED = 8;
-		protected const COLOR_SELECTED = 255;
+		protected const SIZE_SELECTED = 7;
+		protected const COLOR_SELECTED = Utils.getColor(.4,.4,1);
+
+		protected var _lastPos:Point;
 
 		public function AamapObject():void
 		{
@@ -54,6 +58,15 @@ package
 		public function set selected(state:Boolean):void
 		{
 			_area.alpha = int(state) * .5;
+		}
+
+		public function dragStart():void
+		{
+			_lastPos = new Point(x,y);
+		}
+		public function get lastPos():Point
+		{
+			return _lastPos;
 		}
 	}
 }

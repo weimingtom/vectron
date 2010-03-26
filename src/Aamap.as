@@ -66,19 +66,17 @@ package
 
 /* events */
 
-		private function objectHover(e:MouseEvent):void
+		private function objectRollOver(e:MouseEvent):void
 		{
-			var obj = e.target as AamapObject;
-
-			if(obj.selected)
-				return;
-
-			if(e.type == MouseEvent.ROLL_OVER)
-				obj.alpha = .5;
-			else
-				obj.alpha = 1;
+			dispatchEvent(new CustomEvent('OBJECT_ROLL_OVER',e.target));
 		}
 
+		private function objectRollOut(e:MouseEvent):void
+		{
+			dispatchEvent(new CustomEvent('OBJECT_ROLL_OUT',e.target));
+		}
+
+		/*
 		private function objectClick(e:MouseEvent):void
 		{
 			var obj = e.target.parent;
@@ -93,7 +91,7 @@ package
 			else
 				dispatchEvent(new CustomEvent('OBJECT_DRAG_STOP',obj));
 		}
-
+		*/
 
 
 
@@ -102,12 +100,14 @@ package
 		public function addObject(obj:AamapObject):void
 		{
 			addChild(obj);
-			obj.addEventListener(MouseEvent.ROLL_OVER,objectHover,false,0,true);
-			obj.addEventListener(MouseEvent.ROLL_OUT,objectHover,false,0,true);
+			obj.addEventListener(MouseEvent.ROLL_OVER,objectRollOver,false,0,true);
+			obj.addEventListener(MouseEvent.ROLL_OUT,objectRollOut,false,0,true);
 
+			/*
 			obj.addEventListener(MouseEvent.CLICK,objectClick,false,0,true);
 			obj.addEventListener(MouseEvent.MOUSE_DOWN,objectDrag,false,0,true);
 			obj.addEventListener(MouseEvent.MOUSE_UP,objectDrag,false,0,true);
+			*/
 		}
 
 		private function createObjects():void

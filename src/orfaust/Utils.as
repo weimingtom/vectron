@@ -25,33 +25,23 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package orfaust
 {
-	import flash.text.TextField;
-	import flash.events.*;
-
-	import orfaust.Rgb;
-
-	public class DebugTextField extends TextField
+	public class Utils
 	{
-		private var _rgb:Rgb;
-		private var _counter:uint = 0;
+		// get 0-1 RGB values transformed into a 24 bits color value
+		private static const FACTOR_8BITS = 255;
+		private static const RED_FACTOR = 65536; // 256 ^ 2
+		private static const GREEN_FACTOR = 256;
 
-		public function DebugTextField(rgb:Rgb,w:uint,h:uint):void
+		public static function getColor(r:Number,g:Number,b:Number):uint
 		{
-			_rgb = rgb;
-			textColor = rgb.value;
-			border = true;
-			borderColor = rgb.value;
-			multiline = true;
-			wordWrap = false;
+			if(r > 1 || g > 1 || b > 1)
+				throw(new Error('color value out of range (0-1)'));
 
-			width = w;
-			height = h;
-		}
-		public function set rgb(rgb:Rgb):void
-		{
-			_rgb = rgb;
-			textColor = rgb.value
-			borderColor = rgb.value;
+			var r8bits = Math.floor(r * FACTOR_8BITS);
+			var g8bits = Math.floor(g * FACTOR_8BITS);
+			var b8bits = Math.floor(b * FACTOR_8BITS);
+
+			return r8bits * RED_FACTOR + g8bits * GREEN_FACTOR + b8bits;
 		}
 	}
 }

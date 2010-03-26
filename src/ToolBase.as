@@ -30,6 +30,7 @@ package
 	import flash.geom.Point;
 
 	import orfaust.Debug;
+	import orfaust.CustomEvent;
 
 	public class ToolBase extends SimpleButton implements ToolInterface
 	{
@@ -70,6 +71,11 @@ package
 			func(mouse,keys);
 		}
 
+		public function handleObjectMouseHover(e:CustomEvent):void
+		{
+			//e.data.selected = e.type == 'OBJECT_ROLL_OVER';
+		}
+
 		protected function mouseDown(mouse:Point,keys:Object):void
 		{
 			forceOverride('mouseDown()');
@@ -82,6 +88,65 @@ package
 		{
 			forceOverride('mouseMove()');
 		}
+
+
+
+
+
+
+		public function handleObjectMouseEvent(e:MouseEvent,cursor:Point):void
+		{
+			try
+			{
+				var obj = e.target.parent as AamapObject;
+			}
+			catch(e)
+			{
+				Debug.log(e);
+				return;
+			}
+
+			var keys:Object =
+			{
+				ctrl:e.ctrlKey,
+				alt:e.altKey,
+				shift:e.shiftKey
+			}
+
+			switch(e.type)
+			{
+				case MouseEvent.MOUSE_DOWN:
+					objectMouseDown(obj,cursor,keys);
+					break;
+
+				case MouseEvent.MOUSE_UP:
+					objectMouseUp(obj,cursor,keys);
+					break;
+
+				case MouseEvent.MOUSE_MOVE:
+					objectMouseMove(obj,cursor,keys);
+					break;
+			}
+		}
+
+		protected function objectMouseDown(obj:AamapObject,cursor:Point,keys:Object):void
+		{
+			forceOverride('objectMouseDown()');
+		}
+
+		protected function objectMouseUp(obj:AamapObject,cursor:Point,keys:Object):void
+		{
+			forceOverride('objectMouseUp()');
+		}
+
+		protected function objectMouseMove(obj:AamapObject,cursor:Point,keys:Object):void
+		{
+			forceOverride('objectMouseMove()');
+		}
+
+
+
+
 
 		public function close():void
 		{

@@ -33,13 +33,14 @@ package
 	import flash.display.JointStyle;
 
 	import orfaust.Debug;
+	import orfaust.Utils;
 
 	public class Zone extends AamapObject implements AamapObjectInterface
 	{
 		private var _center:Point;
 		private var _radius:Number;
 
-		private const COLOR_DEATH = Math.pow(256,3) - Math.pow(256,2);
+		private const COLOR_DEATH = Utils.getColor(1,0,0);
 
 		public function Zone(center:Point,rad:Number):void
 		{
