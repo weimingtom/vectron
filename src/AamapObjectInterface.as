@@ -30,5 +30,6 @@ package
 	public interface AamapObjectInterface
 	{
 		function render():void;
+		function updateXml():void;
 	}
 }

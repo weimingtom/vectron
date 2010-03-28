@@ -148,5 +148,10 @@ package orfaust
 
 			_debug.scrollV = _debug.numLines;
 		}
+
+		public static function clear():void
+		{
+			_debug.text = '';
+		}
 	}
 }

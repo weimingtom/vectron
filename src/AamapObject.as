@@ -38,25 +38,37 @@ package
 		protected const COLOR_SELECTED = Utils.getColor(.4,.4,1);
 
 		protected var _aamap:Aamap;
+		protected var _xml:XML;
 
 		protected var _lastPos:Point;
 
-		public function AamapObject(aamap:Aamap):void
+		public function AamapObject(aamap:Aamap,xml:XML):void
 		{
 			_aamap = aamap;
+			_xml = xml;
 
 			_area = new Sprite;
 			_area.alpha = 0;
 			addChild(_area);
 
-			useHandCursor = true;
-			buttonMode = true;
+			//useHandCursor = true;
+			//buttonMode = true;
+		}
+
+		public function updateXml():void
+		{}
+
+		public function get xml():XML
+		{
+			return _xml;
+		}
+		public function initXml():XML
+		{
+			return null;
 		}
 
 		public function render():void
-		{
-			
-		}
+		{}
 
 		public function get selected():Boolean
 		{

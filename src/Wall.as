@@ -41,9 +41,9 @@ package
 		private var _points:List = new List;
 		private var _lastSeg:Object;
 
-		public function Wall(mouse:Point,aamap:Aamap):void
+		public function Wall(aamap:Aamap,xml:XML,mouse:Point):void
 		{
-			super(aamap);
+			super(aamap,xml);
 
 			var a = mouse;
 			_points.push(a);
@@ -108,6 +108,39 @@ package
 				sprite.graphics.lineTo(b.x,b.y);
 			}
 		}
+
+
+		override public function initXml():XML
+		{
+			_xml = new XML('<Wall/>');
+			updateXml();
+			return _xml;
+		}
+
+		override public function updateXml():void
+		{
+			_xml.setChildren(new XML('<Point/>'));
+
+			var it = _points.iterator;
+
+			_xml.Point.@x = x + it.data.x;
+			_xml.Point.@y = y + it.data.y;
+
+			it.next();
+			while(!it.end)
+			{
+				var point = new XML('<Point/>');
+				point.@x = x + it.data.x;
+				point.@y = y + it.data.y;
+				_xml.appendChild(point);
+				it.next();
+			}
+		}
+
+
+
+
+
 
 		override public function render():void
 		{

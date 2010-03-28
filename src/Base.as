@@ -51,7 +51,7 @@ package
 		{
 			Debug.addToStage(stage,Const.RIGHT,Const.BOTTOM);
 			Debug.setColor(new Rgb(0,0,0));
-			Debug.setSize(800,100);
+			Debug.setSize(400,300);
 
 			stage.addEventListener(Event.RESIZE,setStageVars,false,0,true);
 			setStageVars(null);

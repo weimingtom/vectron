@@ -36,6 +36,8 @@ package
 	import flash.events.KeyboardEvent;
 	import flash.ui.Keyboard;
 
+	import flash.net.FileReference;
+
 	import orfaust.Debug;
 	import orfaust.CustomEvent;
 	import orfaust.containers.List;
@@ -51,11 +53,16 @@ package
 		private var _mouseDown:Boolean = false;
 
 		private var _tool:ToolInterface;
+		private static var _toolCursor:MovieClip;
 
 		override protected function init():void
 		{
-			var xmlUrl = 'aamap.php?url=';
+			toolCursor.visible = false;
+			_toolCursor = toolCursor;
 
+			// testing urls to load external maps
+
+			//var xmlUrl = 'aamap.php?url=';
 			//xmlUrl += 'resource.armagetronad.net/
 			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/Crossdeath-1.0.1.aamap.xml';
 			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/ecdmazed-1.aamap.xml';
@@ -63,38 +70,27 @@ package
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/race/alba-1.6.aamap.xml';
 			//xmlUrl += 
 
-			//xmlUrl = 'aamap/alba-1.6.aamap.xml';
-			//xmlUrl = 'aamap/diamond-1.0.2.aamap.xml';
-			//xmlUrl = 'aamap/for_old_clients-0.1.0.aamap.xml';
-			//xmlUrl = 'aamap/40-gon-0.2.aamap.xml';
-			//xmlUrl = 'aamap/fourfold_for_old_clients-0.1.0.aamap.xml';
-			//xmlUrl = 'aamap/repeat-0.3.2.aamap.xml';
-			//xmlUrl = 'aamap/square-1.0.1.aamap.xml';
-			//xmlUrl = 'aamap/sumo_4x4-0.1.1.aamap.xml';
-			//xmlUrl = 'aamap/sumo_8x2-0.1.0.aamap.xml';
-			//xmlUrl = 'aamap/zonetest-0.1.0.aamap.xml';
-			//xmlUrl = 'aamap/inaktek-0.7.2.aamap.xml';
-			xmlUrl = 'aamap/PanormousDeath-1.0.1.aamap.xml';
-
-
-			super.loadUrl(xmlUrl,xmlLoaded,loadingProgress);
-			//createMap();
-
+			var xmlUrl = 'aamap/default-1.0.1.aamap.xml';
 
 			stage.addEventListener(Event.RESIZE,onStageResize,false,0,true);
 			onStageResize(null);
 
 			toolBar.tools.addEventListener(MouseEvent.CLICK,onToolClick,false,0,true);
-			toolBar.tools.addEventListener(MouseEvent.ROLL_OVER,toolBarHover,false,0,true);
-			toolBar.tools.addEventListener(MouseEvent.ROLL_OUT,toolBarHover,false,0,true);
+			toolBar.addEventListener(MouseEvent.ROLL_OVER,toolBarHover,false,0,true);
+			toolBar.addEventListener(MouseEvent.ROLL_OUT,toolBarHover,false,0,true);
 
 			_tool = toolBar.tools.select;
 
 			stage.addEventListener(KeyboardEvent.KEY_DOWN,handleKeyboard,false,0,true);
 			stage.addEventListener(KeyboardEvent.KEY_UP,handleKeyboard,false,0,true);
+
+			super.loadUrl(xmlUrl,initMap,loadingProgress);
 		}
 
-
+		public static function get cursor():MovieClip
+		{
+			return _toolCursor;
+		}
 
 
 
@@ -168,9 +164,14 @@ package
 		private function toolBarHover(e:MouseEvent):void
 		{
 			if(e.type == 'rollOver')
+			{
 				removeMapListeners();
+				_tool.close();
+			}
 			else
-				addMapListeners()
+			{
+				addMapListeners();
+			}
 		}
 
 		private function onToolClick(e:MouseEvent):void
@@ -226,21 +227,20 @@ package
 
 /* map */
 
-		private function xmlLoaded(e:Event):void
+		private function initMap(e:Event):void
 		{
 			progBar.visible = false;
-			_aamap = new Aamap(e.target.data);
-			initMap();
-		}
 
-		private function createMap():void
-		{
-			_aamap = new Aamap();
-			initMap();
-		}
+			try
+			{
+				_aamap = new Aamap(e.target.data);
+			}
+			catch(e)
+			{
+				Debug.log(e);
+				return;
+			}
 
-		private function initMap():void
-		{
 			mapContainer.addChild(_aamap);
 			_aamap.scaleY = -1;
 
@@ -250,7 +250,26 @@ package
 			addToolListeners();
 			addMapListeners();
 			stage.addEventListener(MouseEvent.MOUSE_WHEEL,zoom,false,0,true);
+
+			toolBar.save.addEventListener(MouseEvent.CLICK,saveXml,false,0,true);
+			toolBar.del.addEventListener(MouseEvent.CLICK,removeSelected,false,0,true);
 		}
+
+
+		private function removeSelected(e:MouseEvent):void
+		{
+			toolBar.tools.select.removeSelected();
+		}
+
+		private function saveXml(e:MouseEvent):void
+		{
+			Debug.clear();
+			Debug.log('\n' + _aamap.xml);
+		}
+
+
+
+
 
 		private function addMapListeners():void
 		{
@@ -295,7 +314,14 @@ package
 			}
 
 			else
+			{
+				if(e.type == MouseEvent.MOUSE_MOVE)
+				{
+					toolCursor.x = stage.mouseX;
+					toolCursor.y = stage.mouseY;
+				}
 				_tool.handleMouse(e,_aamap);
+			}
 
 			setInfo();
 		}
@@ -328,7 +354,8 @@ package
 					break;
 
 				case KeyboardEvent.KEY_UP:
-					_keyDown.remove(ch);
+					if(_keyDown.find(ch))
+						_keyDown.remove(ch);
 
 					break;
 			}

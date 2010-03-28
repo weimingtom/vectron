@@ -25,21 +25,57 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.MovieClip;
+	import flash.display.Sprite;
+	import flash.geom.Point;
 
-	import flash.events.Event;
+	import flash.display.LineScaleMode;
+	import flash.display.CapsStyle;
+	import flash.display.JointStyle;
 
-	public class Spawn extends MovieClip
+	import orfaust.Debug;
+	import orfaust.Utils;
+
+	public class Spawn extends AamapObject implements AamapObjectInterface
 	{
-		public function Spawn(xPos:Number,yPos:Number):void
+		private var _center:Point;
+
+		private const COLOR = Utils.getColor(1,.5,0);
+
+		public function Spawn(aamap:Aamap,xml:XML,center:Point):void
 		{
-			x = xPos;
-			y = yPos;
-			addEventListener(Event.ADDED_TO_STAGE,init);
+			super(aamap,xml);
+
+			_center = center;
+			render();
 		}
-		private function init(e:Event):void
+
+		public function moveCenter(center:Point):void
 		{
-			
+			_center = center;
+		}
+
+		override public function initXml():XML
+		{
+			_xml = new XML('<Spawn xdir="0" ydir="1" />');
+			updateXml();
+			return _xml;
+		}
+
+		override public function updateXml():void
+		{
+			_xml.@x = x + _center.x;
+			_xml.@y = y + _center.y;
+		}
+
+		override public function render():void
+		{
+			_area.graphics.clear();
+			_area.graphics.lineStyle(SIZE_SELECTED,COLOR_SELECTED,1,false,LineScaleMode.NONE);
+			_area.graphics.drawCircle(_center.x,_center.y,5);
+
+			graphics.clear();
+			graphics.lineStyle(1,COLOR,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			graphics.drawCircle(_center.x,_center.y,5);
 		}
 	}
 }

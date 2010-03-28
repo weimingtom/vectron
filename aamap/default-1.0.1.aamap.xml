@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE Resource SYSTEM "AATeam/map-0.2.8.0_rc4.dtd">
+<Resource type="aamap" name="default" version="1.0.1" author="Anonymous" category="vectron">
+	<Map version="2">
+		<World>
+			<Field>
+				<Spawn x="5" y="-200" xdir="0" ydir="1"/>
+				<Spawn x="-5" y="200" xdir="0" ydir="-1"/>
+				<Wall>
+					<Point x="-250" y="-250"/>
+					<Point x="-250" y="250" />
+					<Point x="250" y="250" />
+					<Point x="250" y="-250" />
+					<Point x="-250" y="-250" />
+				</Wall>
+			</Field>
+		</World>
+	</Map>
+</Resource>

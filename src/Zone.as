@@ -42,9 +42,9 @@ package
 
 		private const COLOR_DEATH = Utils.getColor(1,0,0);
 
-		public function Zone(center:Point,rad:Number,aamap):void
+		public function Zone(aamap:Aamap,xml:XML,center:Point,rad:Number):void
 		{
-			super(aamap);
+			super(aamap,xml);
 
 			_center = center;
 			_radius = rad;
@@ -68,6 +68,20 @@ package
 		{
 			_radius = r;
 			render();
+		}
+
+		override public function initXml():XML
+		{
+			_xml = new XML('<Zone effect="death"/>');
+			updateXml();
+			return _xml;
+		}
+
+		override public function updateXml():void
+		{
+			_xml.ShapeCircle.@radius = _radius;
+			_xml.ShapeCircle.Point.@x = x + _center.x;
+			_xml.ShapeCircle.Point.@y = y + _center.y;
 		}
 
 		override public function render():void

@@ -81,5 +81,15 @@ package orfaust.containers
 		{
 			return new Iterator(this,_head);
 		}
+
+		public function each(callBack:Function):void
+		{
+			var it = iterator;
+			while(!it.end)
+			{
+				callBack(it.data);
+				it.next();
+			}
+		}
 	}
 }

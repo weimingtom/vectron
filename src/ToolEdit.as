@@ -31,73 +31,42 @@ package
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 
+	import flash.ui.Keyboard;
+
 	import orfaust.Debug;
-	import orfaust.CustomEvent;
+	import orfaust.containers.List;
 
-	public class ToolWall extends ToolBase implements ToolInterface
+	public class ToolEdit extends ToolBase implements ToolInterface
 	{
-		private var _wall:Wall;
-
 		override protected function mouseDown(mouse:Point,keys:Object):void
 		{
-			if(_wall == null)
-			{
-				_wall = new Wall(_aamap,null,mouse);
-				dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_wall));
-
-				_wall.appendPoint(mouse);
-			}
-			else
-			{
-				var last = _wall.lastPoint;
-				if(pointsEqual(mouse,last))
-				{
-					if(_wall.vertices == 0)
-						dispatchEvent(new Event('REMOVE_EDITING_OBJECT'));
-					else
-						dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
-
-					_wall = null;
-				}
-				else
-				{
-					_wall.appendPoint(mouse);
-				}
-			}
 		}
 		override protected function mouseUp(mouse:Point,keys:Object):void
 		{
-			if(_wall == null)
-				return;
-
-			var last = _wall.lastPoint;
-			if(pointsEqual(mouse,last))
-			{
-				dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
-				_wall = null;
-			}
-			else
-				_wall.storeLastPoint();
 		}
 		override protected function mouseMove(mouse:Point,keys:Object):void
 		{
-			if(!_mouseDown || _wall == null)
-				return;
+		}
 
-			_wall.moveLastPoint(mouse);
+		override protected function objectMouseDown(obj:AamapObject,cursor:Point,keys:Object):void
+		{
+		}
+
+		override protected function objectMouseUp(obj:AamapObject,cursor:Point,keys:Object):void
+		{
+		}
+
+		override protected function objectMouseMove(obj:AamapObject,cursor:Point,keys:Object):void
+		{
+		}
+
+		override public function handleKeyboard(keyList:List):void
+		{
 		}
 
 		// CLOSE
 		override public function close():void
 		{
-			if(_wall == null)
-				return;
-
-			_wall.storeLastPoint();
-			dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
-			_wall = null;
-
-			_mouseDown = false;
 		}
 	}
 }

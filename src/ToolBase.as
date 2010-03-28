@@ -25,6 +25,7 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
+	import flash.display.MovieClip;
 	import flash.display.SimpleButton;
 	import flash.events.MouseEvent;
 	import flash.geom.Point;
@@ -77,6 +78,8 @@ package
 
 			func(mouse,keys);
 		}
+
+
 
 		public function handleObjectMouseHover(e:CustomEvent):void
 		{
@@ -180,19 +183,6 @@ package
 			var yDist = a.y - b.y;
 
 			return Math.sqrt(xDist * xDist + yDist * yDist);
-		}
-
-		protected function forEachSelected(callBack:Function):void
-		{
-			if(_selected == null)
-				return;
-
-			var it = _selected.iterator;
-			while(!it.end)
-			{
-				callBack(it.data);
-				it.next();
-			}
 		}
 
 

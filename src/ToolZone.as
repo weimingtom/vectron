@@ -51,16 +51,18 @@ package
 			}
 
 			_a = mouse;
-			_zone = new Zone(mouse,defaultRadius,_aamap);
+			_zone = new Zone(_aamap,null,_a,defaultRadius);
 			dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_zone));
 		}
 		override protected function mouseUp(mouse:Point,keys:Object):void
 		{
-			dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
-			_zone = null;
+			close();
 		}
 		override protected function mouseMove(mouse:Point,keys:Object):void
 		{
+			Home.cursor.visible = true;
+			Home.cursor.gotoAndStop(2);
+
 			if(!_mouseDown)
 				return;
 
@@ -93,7 +95,12 @@ package
 		// CLOSE
 		override public function close():void
 		{
-			
+			if(_zone == null)
+				return;
+
+			_mouseDown = false;
+			dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+			_zone = null;
 		}
 	}
 }

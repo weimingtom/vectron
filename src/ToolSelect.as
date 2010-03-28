@@ -25,6 +25,7 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
+	import flash.display.MovieClip;
 	import flash.display.SimpleButton;
 	import flash.geom.Point;
 
@@ -42,7 +43,7 @@ package
 		{
 			if(!_mouseOverObject && _selected != null && !keys.shift)
 			{
-				forEachSelected(deselect);
+				_selected.each(deselect);
 				function deselect(o:AamapObject)
 				{
 					o.selected = false;
@@ -52,14 +53,26 @@ package
 		}
 		override protected function mouseUp(mouse:Point,keys:Object):void
 		{
+			if(_selected != null)
+			{
+				_selected.each(updateXml);
+	
+				function updateXml(obj:AamapObject)
+				{
+					obj.updateXml();
+				}
+			}
 			_dragStart = null;
 		}
 		override protected function mouseMove(mouse:Point,keys:Object):void
 		{
-			if(_dragStart == null)
+			Home.cursor.visible = _mouseOverObject;
+			Home.cursor.gotoAndStop(1);
+
+			if(_dragStart == null || _selected == null)
 				return;
 
-			forEachSelected(moveObj);
+			_selected.each(moveObj);
 			function moveObj(obj:AamapObject)
 			{
 				var lastPos = obj.lastPos;
@@ -100,6 +113,7 @@ package
 					{
 						_selected.push(obj);
 						obj.selected = true;
+						_dragStart = null;
 					}
 				}
 				else
@@ -110,7 +124,7 @@ package
 					}
 					else
 					{
-						forEachSelected(deselect);
+						_selected.each(deselect);
 						function deselect(obj:AamapObject)
 						{
 							obj.selected = false;
@@ -122,13 +136,10 @@ package
 					}
 				}
 
-				if(_selected != null)
+				_selected.each(dragStart);
+				function dragStart(obj:AamapObject)
 				{
-					forEachSelected(dragStart);
-					function dragStart(obj:AamapObject)
-					{
-						obj.dragStart();
-					}
+					obj.dragStart();
 				}
 			}
 		}
@@ -146,12 +157,7 @@ package
 			// remove selected (DELETE)
 			if(keyList.find(Keyboard.DELETE))
 			{
-				forEachSelected(remove);
-				function remove(obj:AamapObject)
-				{
-					obj.remove();
-				}
-				_selected = null;
+				removeSelected();
 			}
 
 			// select all (CTRL + a)
@@ -159,7 +165,7 @@ package
 			{
 				_selected = _aamap.objects;
 
-				forEachSelected(select);
+				_selected.each(select);
 				function select(obj:AamapObject)
 				{
 					obj.selected = true;
@@ -167,9 +173,23 @@ package
 			}
 		}
 
+		public function removeSelected():void
+		{
+			if(_selected == null)
+				return;
+
+			_selected.each(remove);
+			function remove(obj:AamapObject)
+			{
+				obj.remove();
+			}
+			_selected = null;
+		}
+
 		// CLOSE
 		override public function close():void
 		{
+			
 		}
 	}
 }
