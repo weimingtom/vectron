@@ -37,45 +37,70 @@ package
 
 	public class Spawn extends AamapObject implements AamapObjectInterface
 	{
-		private var _center:Point;
+		private var _direction:Point = new Point(1,0);
 
-		private const COLOR = Utils.getColor(1,.5,0);
+		private const COLOR = Utils.getColor(1,0,.8);
 
-		public function Spawn(aamap:Aamap,xml:XML,center:Point):void
+		public function Spawn(aamap:Aamap,xml:XML,center:Point,dir = null):void
 		{
 			super(aamap,xml);
 
-			_center = center;
+			x = center.x;
+			y = center.y;
+
+			if(dir != null)
+				direction = dir;
+
+			render();
+		}
+		public function set direction(dir:Point):void
+		{
+			if(dir.x == _direction.x && dir.y == _direction.y)
+				return;
+
+			_direction = dir;
+			var rad = Math.atan2(_direction.y,_direction.x);
+			rotation = rad / Math.PI * 180;
+
 			render();
 		}
 
-		public function moveCenter(center:Point):void
+		public function get direction():Point
 		{
-			_center = center;
+			return _direction;
 		}
 
 		override public function initXml():XML
 		{
-			_xml = new XML('<Spawn xdir="0" ydir="1" />');
+			_xml = new XML('<Spawn/>');
 			updateXml();
 			return _xml;
 		}
 
 		override public function updateXml():void
 		{
-			_xml.@x = x + _center.x;
-			_xml.@y = y + _center.y;
+			_xml.@x = x;
+			_xml.@y = y;
+			_xml.@xdir = _direction.x;
+			_xml.@ydir = _direction.y;
 		}
 
 		override public function render():void
 		{
 			_area.graphics.clear();
 			_area.graphics.lineStyle(SIZE_SELECTED,COLOR_SELECTED,1,false,LineScaleMode.NONE);
-			_area.graphics.drawCircle(_center.x,_center.y,5);
+			_area.graphics.moveTo(0,0);
+			_area.graphics.lineTo(10,0);
+			_area.graphics.moveTo(5,5);
+			_area.graphics.lineTo(10,0);
+			_area.graphics.lineTo(5,-5);
 
-			graphics.clear();
-			graphics.lineStyle(1,COLOR,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
-			graphics.drawCircle(_center.x,_center.y,5);
+			graphics.lineStyle(2,COLOR,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			graphics.moveTo(0,0);
+			graphics.lineTo(10,0);
+			graphics.moveTo(5,5);
+			graphics.lineTo(10,0);
+			graphics.lineTo(5,-5);
 		}
 	}
 }

@@ -13,6 +13,7 @@
         <project_file path="./ToolWall.as" filetype="as" />
         <project_file path="./ToolSelect.as" filetype="as" />
         <project_file path="./ToolEdit.as" filetype="as" />
+        <project_file path="./ToolSpawn.as" filetype="as" />
     </project_folder>
     <project_folder name="orfaust" expanded="true">
         <project_file path="./orfaust/ProgBar.as" filetype="as" />

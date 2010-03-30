@@ -66,8 +66,8 @@ package
 		}
 		override protected function mouseMove(mouse:Point,keys:Object):void
 		{
-			Home.cursor.visible = _mouseOverObject;
-			Home.cursor.gotoAndStop(1);
+			Home.pointer.visible = _mouseOverObject;
+			Home.pointer.gotoAndStop(1);
 
 			if(_dragStart == null || _selected == null)
 				return;
@@ -189,7 +189,6 @@ package
 		// CLOSE
 		override public function close():void
 		{
-			
 		}
 	}
 }

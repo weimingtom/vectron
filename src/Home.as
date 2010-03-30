@@ -53,17 +53,22 @@ package
 		private var _mouseDown:Boolean = false;
 
 		private var _tool:ToolInterface;
-		private static var _toolCursor:MovieClip;
+		private static var _pointer:MovieClip;
+
+		public static function get mapCursor():Point
+		{
+			return _cursor;
+		}
 
 		override protected function init():void
 		{
-			toolCursor.visible = false;
-			_toolCursor = toolCursor;
+			pointer.visible = false;
+			_pointer = pointer;
 
 			// testing urls to load external maps
 
 			//var xmlUrl = 'aamap.php?url=';
-			//xmlUrl += 'resource.armagetronad.net/
+
 			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/Crossdeath-1.0.1.aamap.xml';
 			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/ecdmazed-1.aamap.xml';
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/motorace/tester-0.1.aamap.xml';
@@ -71,6 +76,8 @@ package
 			//xmlUrl += 
 
 			var xmlUrl = 'aamap/default-1.0.1.aamap.xml';
+
+			Zone.init();
 
 			stage.addEventListener(Event.RESIZE,onStageResize,false,0,true);
 			onStageResize(null);
@@ -87,9 +94,9 @@ package
 			super.loadUrl(xmlUrl,initMap,loadingProgress);
 		}
 
-		public static function get cursor():MovieClip
+		public static function get pointer():MovieClip
 		{
-			return _toolCursor;
+			return _pointer;
 		}
 
 
@@ -106,7 +113,7 @@ package
 
 		private const ZOOM_FACTOR = .95;
 		private var _scale = 1;
-		private var _cursor:Point = new Point(0,0);
+		private static var _cursor:Point = new Point(0,0);
 
 		private function zoomIn():void
 		{
@@ -147,10 +154,26 @@ package
 			_aamap.scaleY = -_scale;
 		}
 
+		private var _grid:Point = new Point(10,10);
+		private var _snapToGrid:Boolean = true;
+
 		private function setInfo():void
 		{
 			_cursor.x = (stage.mouseX - _aamap.x) / _scale;
 			_cursor.y = (-stage.mouseY + _aamap.y) / _scale;
+
+			snapPointer.visible = _snapToGrid;
+			if(_snapToGrid)
+			{
+				var xSnap = Math.floor((_cursor.x + _grid.x / 2) / _grid.x);
+				var ySnap = Math.floor((_cursor.y + _grid.y / 2) / _grid.y);
+
+				_cursor.x = xSnap * _grid.x;
+				_cursor.y = ySnap * _grid.y;
+
+				snapPointer.x = _aamap.x + _cursor.x * _aamap.scaleX;
+				snapPointer.y = _aamap.y + _cursor.y * _aamap.scaleY;
+			}
 
 			info.txt.text =
 				'x: ' + _cursor.x.toString() + '\n' + 
@@ -167,6 +190,8 @@ package
 			{
 				removeMapListeners();
 				_tool.close();
+				_pointer.visible = false;
+				snapPointer.visible = false;
 			}
 			else
 			{
@@ -253,6 +278,8 @@ package
 
 			toolBar.save.addEventListener(MouseEvent.CLICK,saveXml,false,0,true);
 			toolBar.del.addEventListener(MouseEvent.CLICK,removeSelected,false,0,true);
+
+			setInfo();
 		}
 
 
@@ -301,6 +328,7 @@ package
 					case MouseEvent.MOUSE_DOWN:
 						_aamap.startDrag();
 						_draggingMap = true;
+						_pointer.visible = false;
 						break;
 
 					case MouseEvent.MOUSE_UP:
@@ -317,8 +345,8 @@ package
 			{
 				if(e.type == MouseEvent.MOUSE_MOVE)
 				{
-					toolCursor.x = stage.mouseX;
-					toolCursor.y = stage.mouseY;
+					pointer.x = stage.mouseX;
+					pointer.y = stage.mouseY;
 				}
 				_tool.handleMouse(e,_aamap);
 			}

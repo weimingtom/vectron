@@ -39,15 +39,25 @@ package
 	{
 		private var _center:Point;
 		private var _radius:Number;
+		private var _effect:String;
 
-		private const COLOR_DEATH = Utils.getColor(1,0,0);
+		private const DEFAULT_EFFECT = 'death';
+		private static var zoneColor:Array = new Array;
 
-		public function Zone(aamap:Aamap,xml:XML,center:Point,rad:Number):void
+		public static function init():void
+		{
+			zoneColor['death'] = Utils.getColor(1,0,0);
+			zoneColor['win'] = Utils.getColor(0,1,0);
+			zoneColor['fortress'] = Utils.getColor(0,0,1);
+		}
+
+		public function Zone(aamap:Aamap,xml:XML,center:Point,rad:Number,effect:String = DEFAULT_EFFECT):void
 		{
 			super(aamap,xml);
 
 			_center = center;
 			_radius = rad;
+			_effect = effect;
 			render();
 		}
 
@@ -63,6 +73,11 @@ package
 
 			_radius = Math.sqrt(xDist * xDist + yDist * yDist);
 			render();
+		}
+
+		public function get radius():Number
+		{
+			return _radius;
 		}
 		public function set radius(r:Number):void
 		{
@@ -91,7 +106,7 @@ package
 			_area.graphics.drawCircle(_center.x,_center.y,_radius);
 
 			graphics.clear();
-			graphics.lineStyle(1,COLOR_DEATH,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			graphics.lineStyle(1,zoneColor[_effect],1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
 			graphics.drawCircle(_center.x,_center.y,_radius);
 		}
 	}

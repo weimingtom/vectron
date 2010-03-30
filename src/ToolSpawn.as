@@ -37,19 +37,16 @@ package
 	public class ToolSpawn extends ToolBase implements ToolInterface
 	{
 		private var _spawn:Spawn;
-		private var _a:Point;
-		private var _b:Point;
 
 		override protected function mouseDown(mouse:Point,keys:Object):void
 		{
 			if(_spawn != null)
 			{
-				error('newzone != null');
+				error('new spawn != null');
 				return;
 			}
 
-			_a = mouse;
-			_spawn = new Spawn(_aamap,null,_a);
+			_spawn = new Spawn(_aamap,null,mouse);
 			dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_spawn));
 		}
 		override protected function mouseUp(mouse:Point,keys:Object):void
@@ -67,9 +64,38 @@ package
 				return;
 			}
 
-			_b = mouse;
+			var axes = _aamap.axes;
 
-			_spawn.moveCenter(_a);
+			// get mouse cursor's distance from spawn's center
+			var xDist = mouse.x - _spawn.x;
+			var yDist = mouse.y - _spawn.y;
+
+			// get the real angle in radians
+			var rad = Math.atan2(yDist,xDist);
+
+			// add half axes portion for better interaction
+			// i.e. let the arrow follow the mouse cursor
+			rad += Math.PI / axes;
+
+			// divide the circumference by current map axes
+			// (snap spawn rotation to axes)
+			var fraction = Math.floor(rad / Math.PI * axes / 2);
+
+			// recalculate the snapped angle in radians
+			var snapRad = (Math.PI * fraction) / axes * 2;
+
+			// get sine and cosine
+			var xDir = Math.cos(snapRad);
+			var yDir = Math.sin(snapRad);
+
+			// sin and cos functions return weird numbers in some cases...
+			// fix required
+			if(snapRad == Math.PI / 2 || snapRad == -Math.PI / 2)
+				xDir = 0;
+			else if(snapRad == Math.PI || snapRad == -Math.PI)
+				yDir = 0;
+
+			_spawn.direction = new Point(xDir,yDir);
 		}
 
 		// CLOSE

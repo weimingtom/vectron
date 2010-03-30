@@ -82,13 +82,14 @@ package orfaust.containers
 			return new Iterator(this,_head);
 		}
 
+		// EACH call the given function for each element in list 
 		public function each(callBack:Function):void
 		{
-			var it = iterator;
-			while(!it.end)
+			var node = _head;
+			while(node != null)
 			{
-				callBack(it.data);
-				it.next();
+				callBack(node.data);
+				node = node.next;
 			}
 		}
 	}

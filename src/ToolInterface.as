@@ -40,6 +40,6 @@ package
 		function handleKeyboard(keyList:List):void;
 
 		function close():void;
-		function get objectDragging():Boolean
+		function get objectDragging():Boolean;
 	}
 }

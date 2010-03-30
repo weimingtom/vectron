@@ -46,10 +46,8 @@ package
 		public function handleMouse(e:MouseEvent,aamap:Aamap):void
 		{
 			_aamap = aamap;
-			var X = aamap.mouseX;
-			var Y = aamap.mouseY;
+			var cursor = new Point(Home.mapCursor.x,Home.mapCursor.y);
 			
-			var mouse = new Point(X,Y);
 			var func:Function;
 
 			switch(e.type)
@@ -76,7 +74,7 @@ package
 				shift:e.shiftKey
 			}
 
-			func(mouse,keys);
+			func(cursor,keys);
 		}
 
 
@@ -196,6 +194,5 @@ package
 		{
 			throw new Error(e);
 		}
-
 	}
 }

@@ -60,8 +60,8 @@ package
 		}
 		override protected function mouseMove(mouse:Point,keys:Object):void
 		{
-			Home.cursor.visible = true;
-			Home.cursor.gotoAndStop(2);
+			Home.pointer.visible = true;
+			Home.pointer.gotoAndStop(2);
 
 			if(!_mouseDown)
 				return;
@@ -99,7 +99,12 @@ package
 				return;
 
 			_mouseDown = false;
-			dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+
+			if(_zone.radius == 0)
+				dispatchEvent(new Event('REMOVE_EDITING_OBJECT'));
+			else
+				dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+
 			_zone = null;
 		}
 	}

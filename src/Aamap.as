@@ -44,6 +44,8 @@ package
 
 		private var _editing:Sprite;
 
+		private var _axes:uint = 4;
+
 		public function Aamap(xml:String):void
 		{
 			_xml = new XML(xml);
@@ -64,6 +66,7 @@ package
 
 		public function get xml():XML
 		{
+			resetXml();
 			return _xml;
 		}
 
@@ -135,8 +138,6 @@ package
 			obj.removeEventListener(MouseEvent.ROLL_OUT,objectRollOut);
 			removeChild(obj);
 			_objects.remove(obj);
-
-			resetXml();
 		}
 
 		public function get objects():List
@@ -174,9 +175,15 @@ package
 
 		private function drawSpawn(xml:XML):void
 		{
-			var p = new Point(xml.attribute('x'),xml.attribute('y'));
+			var xPos = parseFloat(xml.attribute('x'));
+			var yPos = parseFloat(xml.attribute('y'));
+			var p = new Point(xPos,yPos);
 
-			var spawn = new Spawn(this,xml,p);
+			var xDir = parseFloat(xml.attribute('xdir'));
+			var yDir = parseFloat(xml.attribute('ydir'));
+			var dir = new Point(xDir,yDir);
+
+			var spawn = new Spawn(this,xml,p,dir);
 			addObject(spawn);
 		}
 
@@ -187,7 +194,7 @@ package
 			var radius = shape.attribute('radius');
 			var center = new Point(shape.Point.attribute('x'),shape.Point.attribute('y'));
 
-			var zone = new Zone(this,xml,center,radius);
+			var zone = new Zone(this,xml,center,radius,effect);
 			addObject(zone);
 		}
 
@@ -206,6 +213,17 @@ package
 			}
 			wall.render();
 			addObject(wall);
+		}
+
+		public function set axes(val:uint):void
+		{
+			if(val <= 2)
+				return;
+			_axes = val;
+		}
+		public function get axes():uint
+		{
+			return _axes;
 		}
 	}
 }
