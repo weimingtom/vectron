@@ -41,26 +41,34 @@ package
 	{
 		override protected function mouseDown(mouse:Point,keys:Object):void
 		{
-			if(!_mouseOverObject && _selected != null && !keys.shift)
-			{
-				_selected.each(deselect);
-				function deselect(o:AamapObject)
-				{
-					o.selected = false;
-				}
-				_selected = null;
-			}
+			if(!_mouseOverObject && !keys.shift)
+				deselectAll();
 		}
+
+		private function deselectAll():void
+		{
+			if(_selected == null)
+				return;
+
+			_selected.each(deselect);
+			function deselect(obj:AamapObject)
+			{
+				obj.selected = false;
+			}
+			_selected = null;
+		}
+
 		override protected function mouseUp(mouse:Point,keys:Object):void
 		{
 			if(_selected != null)
 			{
 				_selected.each(updateXml);
-	
 				function updateXml(obj:AamapObject)
 				{
 					obj.updateXml();
 				}
+
+				setInfo();
 			}
 			_dragStart = null;
 		}
@@ -160,7 +168,7 @@ package
 				removeSelected();
 			}
 
-			// select all (CTRL + a)
+			// select all (CTRL + A)
 			else if(keyList.find(Keyboard.CONTROL) && keyList.find(65))
 			{
 				_selected = _aamap.objects;
@@ -170,6 +178,12 @@ package
 				{
 					obj.selected = true;
 				}
+			}
+
+			// deselect all (CTRL + D)
+			else if(keyList.find(Keyboard.CONTROL) && keyList.find(68))
+			{
+				deselectAll();
 			}
 		}
 
@@ -189,6 +203,32 @@ package
 		// CLOSE
 		override public function close():void
 		{
+		}
+
+		private function setInfo():void
+		{
+			if(_selected.length == 1)
+			{
+				var obj = _selected.front;
+
+				if(obj is Spawn)
+				{
+					Debug.log('<Spawn x="' + obj.x + '" y="' + obj.y +
+							  '" xdir="' + obj.direction.x + '" ydir="' + obj.direction.y + '"/>');
+				}
+				else if(obj is Zone)
+				{
+					Debug.log(obj.xml);
+				}
+				else if(obj is Wall)
+				{
+					Debug.log(obj.xml);
+				}
+			}
+			else
+			{
+				//clear info
+			}
 		}
 	}
 }

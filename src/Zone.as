@@ -106,8 +106,13 @@ package
 			_area.graphics.drawCircle(_center.x,_center.y,_radius);
 
 			graphics.clear();
-			graphics.lineStyle(1,zoneColor[_effect],1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			graphics.lineStyle(2,zoneColor[_effect],1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
 			graphics.drawCircle(_center.x,_center.y,_radius);
+		}
+
+		public function get center():Point
+		{
+			return new Point(x + _center.x,y + _center.y);
 		}
 	}
 }

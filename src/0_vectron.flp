@@ -10,10 +10,10 @@
         <project_file path="./ToolZone.as" filetype="as" />
         <project_file path="./ToolInterface.as" filetype="as" />
         <project_file path="./ToolBase.as" filetype="as" />
-        <project_file path="./ToolWall.as" filetype="as" />
         <project_file path="./ToolSelect.as" filetype="as" />
         <project_file path="./ToolEdit.as" filetype="as" />
         <project_file path="./ToolSpawn.as" filetype="as" />
+        <project_file path="./ToolWall.as" filetype="as" />
     </project_folder>
     <project_folder name="orfaust" expanded="true">
         <project_file path="./orfaust/ProgBar.as" filetype="as" />
@@ -26,4 +26,5 @@
     <project_file path="./Home.as" filetype="as" />
     <project_file path="./Base.as" filetype="as" />
     <project_file path="./Aamap.as" filetype="as" />
+    <project_file path="./Grid.as" filetype="as" />
 </flash_project>

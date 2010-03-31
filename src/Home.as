@@ -44,16 +44,11 @@ package
 
 	public class Home extends Base
 	{
-		private const NONE = 'none';
-		private const WALL = 'wall';
-		private const ZONE = 'zone';
-		private const SELECT = 'select';
-		
 		private var _aamap:Aamap;
-		private var _mouseDown:Boolean = false;
 
 		private var _tool:ToolInterface;
 		private static var _pointer:MovieClip;
+		private var _snapToGrid:Boolean = true;
 
 		public static function get mapCursor():Point
 		{
@@ -75,16 +70,28 @@ package
 			//xmlUrl += 'resource.armagetronad.net/resource/hoop/race/alba-1.6.aamap.xml';
 			//xmlUrl += 
 
-			var xmlUrl = 'aamap/default-1.0.1.aamap.xml';
+			//var xmlUrl = 'aamap/default-1.0.1.aamap.xml';
+			var xmlUrl = 'aamap/vectron-1.0.1.aamap.xml';
 
 			Zone.init();
 
 			stage.addEventListener(Event.RESIZE,onStageResize,false,0,true);
 			onStageResize(null);
 
+			infoHandler.addEventListener(MouseEvent.MOUSE_DOWN,handleInfoSize,false,0,true);
+			infoHandler.addEventListener(MouseEvent.MOUSE_UP,handleInfoSize,false,0,true);
+			infoHandler.addEventListener(MouseEvent.ROLL_OVER,infoHandlerHover,false,0,true);
+			infoHandler.addEventListener(MouseEvent.ROLL_OUT,infoHandlerHover,false,0,true);
+			infoHandler.addEventListener(MouseEvent.MOUSE_MOVE,infoHandlerHover,false,0,true);
+
 			toolBar.tools.addEventListener(MouseEvent.CLICK,onToolClick,false,0,true);
-			toolBar.addEventListener(MouseEvent.ROLL_OVER,toolBarHover,false,0,true);
-			toolBar.addEventListener(MouseEvent.ROLL_OUT,toolBarHover,false,0,true);
+			toolBar.addEventListener(MouseEvent.ROLL_OVER,breakToolEvents,false,0,true);
+			toolBar.addEventListener(MouseEvent.ROLL_OUT,breakToolEvents,false,0,true);
+
+			info.addEventListener(MouseEvent.ROLL_OVER,breakToolEvents,false,0,true);
+			info.addEventListener(MouseEvent.ROLL_OUT,breakToolEvents,false,0,true);
+			infoHandler.addEventListener(MouseEvent.ROLL_OVER,breakToolEvents,false,0,true);
+			infoHandler.addEventListener(MouseEvent.ROLL_OUT,breakToolEvents,false,0,true);
 
 			_tool = toolBar.tools.select;
 
@@ -93,6 +100,39 @@ package
 
 			super.loadUrl(xmlUrl,initMap,loadingProgress);
 		}
+
+		private var _infoHandlerMouseDown:Boolean = false;
+		private const INFO_MAX_WIDTH = 230;
+
+		import flash.geom.Rectangle;
+
+		private function handleInfoSize(e:MouseEvent):void
+		{
+			if(e.type == MouseEvent.MOUSE_DOWN)
+				infoHandler.startDrag(false,new Rectangle(0,0,INFO_MAX_WIDTH,0));
+			else
+				infoHandler.stopDrag();
+		}
+		private function infoHandlerHover(e:MouseEvent):void
+		{
+			pointer.visible = true;
+			pointer.gotoAndStop(2);
+
+			if(e.type == MouseEvent.ROLL_OVER || e.type == MouseEvent.MOUSE_MOVE)
+			{
+				infoMask.width = infoHandler.x;
+				pointer.x = stage.mouseX;
+				pointer.y = stage.mouseY;
+			}
+			else
+			{
+				pointer.visible = false;
+			}
+		}
+
+
+
+
 
 		public static function get pointer():MovieClip
 		{
@@ -130,6 +170,7 @@ package
 			_aamap.y -= -_cursor.y * factor;
 
 			setInfo();
+			grid.render(_aamap);
 		}
 		private function zoomOut():void
 		{
@@ -146,6 +187,7 @@ package
 			_aamap.y += -_cursor.y * factor;
 
 			setInfo();
+			grid.render(_aamap);
 		}
 
 		private function setScale():void
@@ -153,9 +195,6 @@ package
 			_aamap.scaleX = _scale;
 			_aamap.scaleY = -_scale;
 		}
-
-		private var _grid:Point = new Point(10,10);
-		private var _snapToGrid:Boolean = true;
 
 		private function setInfo():void
 		{
@@ -165,11 +204,11 @@ package
 			snapPointer.visible = _snapToGrid;
 			if(_snapToGrid)
 			{
-				var xSnap = Math.floor((_cursor.x + _grid.x / 2) / _grid.x);
-				var ySnap = Math.floor((_cursor.y + _grid.y / 2) / _grid.y);
+				var xSnap = Math.floor((_cursor.x + grid.size.x / 2) / grid.size.x);
+				var ySnap = Math.floor((_cursor.y + grid.size.y / 2) / grid.size.y);
 
-				_cursor.x = xSnap * _grid.x;
-				_cursor.y = ySnap * _grid.y;
+				_cursor.x = xSnap * grid.size.x;
+				_cursor.y = ySnap * grid.size.y;
 
 				snapPointer.x = _aamap.x + _cursor.x * _aamap.scaleX;
 				snapPointer.y = _aamap.y + _cursor.y * _aamap.scaleY;
@@ -182,15 +221,16 @@ package
 		}
 
 
+
+
 /* tools */
 
-		private function toolBarHover(e:MouseEvent):void
+		private function breakToolEvents(e:MouseEvent):void
 		{
 			if(e.type == 'rollOver')
 			{
 				removeMapListeners();
 				_tool.close();
-				_pointer.visible = false;
 				snapPointer.visible = false;
 			}
 			else
@@ -201,9 +241,15 @@ package
 
 		private function onToolClick(e:MouseEvent):void
 		{
-			var selected = e.target;
+			switchTool(e.target);
+		}
+
+		private function switchTool(selected:*):void
+		{
 			if(selected == _tool || selected == toolBar || selected == toolBar.overlay)
 				return;
+
+			pointer.visible = false;
 
 			_tool.close();
 			removeToolListeners();
@@ -279,6 +325,9 @@ package
 			toolBar.save.addEventListener(MouseEvent.CLICK,saveXml,false,0,true);
 			toolBar.del.addEventListener(MouseEvent.CLICK,removeSelected,false,0,true);
 
+			grid.size = new Point(10,10);
+			grid.render(_aamap);
+
 			setInfo();
 		}
 
@@ -337,6 +386,7 @@ package
 						break;
 
 					case MouseEvent.MOUSE_MOVE:
+						grid.render(_aamap);
 						break;
 				}
 			}
@@ -379,6 +429,9 @@ package
 					if(!_keyDown.find(ch))
 						_keyDown.push(ch);
 
+					if(!e.ctrlKey && !e.altKey && ! e.shiftKey)
+						shortCuts(ch);
+
 					break;
 
 				case KeyboardEvent.KEY_UP:
@@ -390,7 +443,31 @@ package
 			_tool.handleKeyboard(_keyDown);
 		}
 
+		private function shortCuts(ch):void
+		{
+			switch(ch)
+			{
+				case 65:	// A -> edit tool
+					switchTool(toolBar.tools.edit);
+					break;
 
+				case 83:	// S -> spawn tool
+					switchTool(toolBar.tools.spawn);
+					break;
+
+				case 86:	// V -> select tool
+					switchTool(toolBar.tools.select);
+					break;
+
+				case 87:	// W -> wall tool
+					switchTool(toolBar.tools.wall);
+					break;
+
+				case 90:	// Z -> zone tool
+					switchTool(toolBar.tools.zone);
+					break;
+			}
+		}
 
 
 
@@ -402,7 +479,6 @@ package
 				error('editing is not empty');
 			else
 			{
-				//toolBar.visible = false;
 				_aamap.editing.addChild(e.data);
 			}
 		}
@@ -418,7 +494,6 @@ package
 			{
 				var obj = _aamap.editing.getChildAt(0);
 				_aamap.addObject(obj);
-				//toolBar.visible = true;
 			}
 		}
 		private function removeEditingObject(e:Event):void
@@ -434,22 +509,6 @@ package
 				var obj = _aamap.editing.getChildAt(0);
 				_aamap.editing.removeChild(obj);
 			}
-		}
-
-		/*
-		private function objectClick(e:CustomEvent):void
-		{
-			var obj = e.data as AamapObject;
-			obj.selected = !obj.selected;
-		}
-		*/
-
-		private function objectClick(e:MouseEvent):void
-		{
-			/*
-			var obj = e.target.parent as AamapObject;
-			obj.selected = !obj.selected;
-			*/
 		}
 
 		private function objectDragStart(e:CustomEvent):void

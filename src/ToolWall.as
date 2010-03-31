@@ -73,7 +73,11 @@ package
 			var last = _wall.lastPoint;
 			if(pointsEqual(mouse,last))
 			{
-				dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+				if(_wall.vertices > 1)
+					dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+				else
+					dispatchEvent(new Event('REMOVE_EDITING_OBJECT'));
+
 				_wall = null;
 			}
 			else

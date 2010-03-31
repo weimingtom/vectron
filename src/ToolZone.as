@@ -60,9 +60,6 @@ package
 		}
 		override protected function mouseMove(mouse:Point,keys:Object):void
 		{
-			Home.pointer.visible = true;
-			Home.pointer.gotoAndStop(2);
-
 			if(!_mouseDown)
 				return;
 

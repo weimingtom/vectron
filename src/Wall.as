@@ -40,13 +40,21 @@ package
 	{
 		private var _points:List = new List;
 		private var _lastSeg:Object;
+		private var _wallHeight:Number;
 
-		public function Wall(aamap:Aamap,xml:XML,mouse:Point):void
+		public var defaultHeight = 0;
+
+		public function Wall(aamap:Aamap,xml:XML,mouse:Point,wallHeight = null):void
 		{
 			super(aamap,xml);
 
 			var a = mouse;
 			_points.push(a);
+
+			if(wallHeight == null)
+				_wallHeight = defaultHeight;
+			else
+				_wallHeight = wallHeight;
 		}
 
 		public function moveLastPoint(mouse:Point):void
@@ -119,6 +127,9 @@ package
 
 		override public function updateXml():void
 		{
+			if(_wallHeight != 0)
+				_xml.@height = _wallHeight;
+
 			_xml.setChildren(new XML('<Point/>'));
 
 			var it = _points.iterator;
@@ -163,7 +174,7 @@ package
 			// draw visible object
 			var jit = _points.iterator;
 
-			graphics.lineStyle(1,0,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			graphics.lineStyle(2,0,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
 			graphics.moveTo(jit.data.x,jit.data.y);
 
 			jit.next();
@@ -178,6 +189,19 @@ package
 		public function get vertices():uint
 		{
 			return _points.length;
+		}
+
+		public function set wallHeight(val:Number):void
+		{
+			if(val < 0)
+				_wallHeight = defaultHeight;
+			else
+				_wallHeight = val;
+		}
+
+		public function get wallHeight():Number
+		{
+			return _wallHeight;
 		}
 	}
 }
