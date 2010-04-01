@@ -52,10 +52,6 @@ package
 			var hStep = size.x * aamap.scaleX;
 			var hStart = aamap.x % hStep;
 			
-			
-			
-			Debug.log(hStep);
-
 			var vStep = size.y * (-aamap.scaleY);
 			var vStart = aamap.y % vStep;
 
