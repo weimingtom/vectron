@@ -48,11 +48,15 @@ package
 
 		private var _tool:ToolInterface;
 		private static var _pointer:MovieClip;
-		private var _snapToGrid:Boolean = true;
+		private static var _snapToGrid:Boolean = true;
 
 		public static function get mapCursor():Point
 		{
 			return _cursor;
+		}
+		public static function set snapToGrid(val:Boolean)
+		{
+			_snapToGrid = val;
 		}
 
 		override protected function init():void
