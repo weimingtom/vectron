@@ -25,60 +25,36 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.MovieClip;
-	import flash.display.Loader;
+	import flash.display.MovieClip
+	import flash.display.Loader
 
-	import flash.net.URLLoader;
-	import flash.net.URLRequest;
+	import flash.net.URLLoader
+	import flash.net.URLRequest
 
-	import flash.events.Event;
-	import flash.events.IOErrorEvent;
-	import flash.events.SecurityErrorEvent;
-	import flash.events.ProgressEvent;
+	import flash.events.Event
+	import flash.events.IOErrorEvent
+	import flash.events.SecurityErrorEvent
+	import flash.events.ProgressEvent
 
-	import orfaust.*
+	import orfaust.SelfInit
+	import orfaust.Debug
+	import orfaust.Const
+	import orfaust.Rgb
 
-	public class Base extends MovieClip
+	public class Base extends SelfInit
 	{
-		public function Base():void
-		{
-			addEventListener(Event.ADDED_TO_STAGE,addDebug);
-		}
-
-/* init */
-
-		private function addDebug(e:Event):void
+		override protected function addResizeListener(e:Event):void
 		{
 			Debug.addToStage(stage,Const.RIGHT,Const.BOTTOM);
 			Debug.setColor(new Rgb(0,0,0));
-			Debug.setSize(400,300);
+			Debug.setSize(400,200);
 
-			stage.addEventListener(Event.RESIZE,setStageVars,false,0,true);
-			setStageVars(null);
+			stage.addEventListener(Event.RESIZE,onStageResize);
+			onStageResize(null);
 			init();
 		}
 
-		protected var _sW:Number;
-		protected var _sH:Number;
-		private function setStageVars(e:Event):void
-		{
-			_sW = stage.stageWidth;
-			_sH = stage.stageHeight;
-		}
 
-		protected function init():void
-		{
-			forceOverride('init()');
-		}
-
-		private function forceOverride(f:String):void
-		{
-			throw new Error('function ' + f + ' should be overridden');
-		}
-
-		public function prepare():void{}
-		public function show(callBack:Function):void{}
-		public function hide(callBack:Function):void{}
 
 /* loading */
 

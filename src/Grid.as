@@ -39,20 +39,28 @@ package
 
 	public class Grid extends Sprite
 	{
-		public var size:Point;
-		private var _scale:Point;
-		private var _offset:Point;
+		public var size:Point = new Point(1,1);
 
 		public var color = Utils.getColor(.8,.8,.9);
+		public var axesColor = Utils.getColor(.0,.6,.7);
+
+		private const MIN_STEP = 10;
 
 		public function render(aamap:Aamap):void
 		{
-			var limit = 10;
+			if(!visible)
+				return;
 
 			var hStep = size.x * aamap.scaleX;
+			while(hStep < MIN_STEP)
+				hStep *= 2;
+
 			var hStart = aamap.x % hStep;
 			
 			var vStep = size.y * (-aamap.scaleY);
+			while(vStep < MIN_STEP)
+				vStep *= 2;
+
 			var vStart = aamap.y % vStep;
 
 			var sW = stage.stageWidth;
@@ -69,6 +77,13 @@ package
 
 			for(var v = vStart; v < sH; v += vStep)
 			{
+				/*
+				if(v == 0)
+					graphics.lineStyle(1,axesColor);
+				else
+				*/
+					graphics.lineStyle(1,color);
+
 				graphics.moveTo(0,v);
 				graphics.lineTo(sW,v);
 			}

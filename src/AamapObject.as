@@ -29,13 +29,13 @@ package
 	import flash.geom.Point;
 
 	import orfaust.Debug;
-	import orfaust.Utils;
 
 	public class AamapObject extends Sprite implements AamapObjectInterface
 	{
-		protected var _area:Sprite;
+		protected var _draw:SelectableArea;
+		protected var _area:SelectableArea;
 		protected const SIZE_SELECTED = 7;
-		protected const COLOR_SELECTED = Utils.getColor(.4,.4,1);
+		protected const COLOR_SELECTED = 0x7777FF;
 
 		protected var _aamap:Aamap;
 		protected var _xml:XML;
@@ -47,12 +47,12 @@ package
 			_aamap = aamap;
 			_xml = xml;
 
-			_area = new Sprite;
+			_area = new SelectableArea;
 			_area.alpha = 0;
 			addChild(_area);
 
-			//useHandCursor = true;
-			//buttonMode = true;
+			_draw = new SelectableArea;
+			addChild(_draw);
 		}
 
 		public function updateXml():void

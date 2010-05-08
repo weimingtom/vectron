@@ -37,43 +37,25 @@ package
 		// INIT
 		override protected function init():void
 		{
-			var monitor:Monitor = new Monitor(500);
+			var monitor:Monitor = new Monitor(200);
 			stuff.addChild(monitor);
 
 			//Debug.active = false;
 			//monitor.visible = false;
 
-			super.loadMedia('home.swf',homeLoaded,homeProgress);
+			super.loadMedia('home.swf',homeLoaded,progBar.setProgress);
 
 			stage.addEventListener(Event.RESIZE,onStageResize,false,0,true);
 			onStageResize(null);
-		}
-
-		// HOME LOADING PROGRESS
-		private function homeProgress(e:ProgressEvent):void
-		{
-			progBar.setProgress(e.bytesLoaded,e.bytesTotal);
 		}
 
 		// HOME LOADED
 		private function homeLoaded(e:Event):void
 		{
 			var home:Base = e.target.content as Base;
-			home.prepare();
 			container.addChild(home);
-			home.show(null);
 
 			progBar.visible = false;
-		}
-
-		// STAGE RESIZE
-		private function onStageResize(e:Event):void
-		{
-			if(progBar.visible)
-			{
-				progBar.x = _sW / 2 - progBar.width / 2;
-				progBar.y = _sH / 2 - progBar.height / 2;
-			}
 		}
 	}
 }

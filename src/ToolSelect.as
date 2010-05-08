@@ -25,210 +25,320 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.MovieClip;
-	import flash.display.SimpleButton;
-	import flash.geom.Point;
+	import flash.events.MouseEvent
+	import flash.ui.Keyboard
+	import flash.geom.Point
 
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-
-	import flash.ui.Keyboard;
-
-	import orfaust.Debug;
-	import orfaust.containers.List;
+	import orfaust.Debug
+	import orfaust.containers.LinkedList
+	import orfaust.history.*
+	import actions.*
 
 	public class ToolSelect extends ToolBase implements ToolInterface
 	{
-		override protected function mouseDown(mouse:Point,keys:Object):void
-		{
-			if(!_mouseOverObject && !keys.shift)
-				deselectAll();
-		}
+		private var _selected:LinkedList = new LinkedList;
+		private var _cursorMoved:Boolean = false;
+		private var _dragStart:Point;
+		private var _target:AamapObject;
+		private var _selectArea:SelectArea;
 
-		private function deselectAll():void
+		private var _connections:Array;
+
+		override protected function begin(e:MouseEvent):void
 		{
-			if(_selected == null)
+			if(UserEvents.mouseLocked)
 				return;
 
-			_selected.each(deselect);
-			function deselect(obj:AamapObject)
+			_cursorStart = Info.cursor;
+			_snapCursorStart = Info.snapCursor;
+			var target = Info.cursorTarget;
+
+			if(target == null || UserEvents.keyIsDown(Keyboard.SHIFT))
 			{
-				obj.selected = false;
-			}
-			_selected = null;
-		}
-
-		override protected function mouseUp(mouse:Point,keys:Object):void
-		{
-			if(_selected != null)
-			{
-				_selected.each(updateXml);
-				function updateXml(obj:AamapObject)
-				{
-					obj.updateXml();
-				}
-
-				setInfo();
-			}
-			_dragStart = null;
-		}
-		override protected function mouseMove(mouse:Point,keys:Object):void
-		{
-			Home.pointer.visible = _mouseOverObject;
-			Home.pointer.gotoAndStop(1);
-
-			if(_dragStart == null || _selected == null)
-				return;
-
-			_selected.each(moveObj);
-			function moveObj(obj:AamapObject)
-			{
-				var lastPos = obj.lastPos;
-
-				obj.x = lastPos.x + mouse.x - _dragStart.x;
-				obj.y = lastPos.y + mouse.y - _dragStart.y;
-			}
-		}
-
-		override protected function objectMouseDown(obj:AamapObject,cursor:Point,keys:Object):void
-		{
-			// dragging the map?
-			if(keys.ctrl)
-				return;
-
-			_dragStart = new Point(cursor.x,cursor.y);
-
-			if(_selected == null)
-			{
-				_selected = new List;
-				_selected.push(obj);
-				obj.selected = true;
-				obj.dragStart();
+				stage.addEventListener(MouseEvent.MOUSE_MOVE,updateSelection);
+				stage.addEventListener(MouseEvent.MOUSE_UP,endSelection);
 			}
 			else
 			{
-				if(keys.shift)
+				if(!target.selected)
 				{
-					if(_selected.find(obj))
+					var collector = new ActionsCollector('Select: ' + target);
+					deselectAll(collector);
+					select(target,collector);
+					_aamap.history.push(collector);
+				}
+
+				_selected.each(foreach);
+				function foreach(object)
+				{
+					object.dragStart();
+				}
+				stage.addEventListener(MouseEvent.MOUSE_MOVE,moveSelected);
+				stage.addEventListener(MouseEvent.MOUSE_UP,releaseSelected);
+			}
+		}
+
+		private function updateSelection(e:MouseEvent):void
+		{
+			if(!_cursorMoved)
+			{
+				_cursorMoved = true;
+				_selectArea = new SelectArea(_cursorStart);
+				_aamap.addChild(_selectArea);
+			}
+			_selectArea.render(Info.cursor);
+		}
+
+		private function endSelection(e:MouseEvent):void
+		{
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,updateSelection);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,endSelection);
+
+			var shift = UserEvents.keyIsDown(Keyboard.SHIFT);
+
+			if(_cursorMoved)
+			{
+				_cursorMoved = false;
+				var collector = new ActionsCollector('Select area');
+
+				if(_selected.length > 0 && !shift)
+					deselectAll(collector);
+
+				var objectsHit:Boolean = false;
+
+				_selectArea.init();
+
+				_aamap.objects.each(test);
+				function test(object)
+				{
+					if(_selectArea.intersects(object))
 					{
-						_selected.remove(obj);
-						obj.selected = false;
-						_dragStart = null;
-						if(_selected.length == 0)
-							_selected = null;
+						if(!objectsHit)
+							objectsHit = true;
+
+						if(shift)
+							toggleSelection(object,collector);
+						else
+							select(object,collector);
 					}
-					else
-					{
-						_selected.push(obj);
-						obj.selected = true;
-						_dragStart = null;
-					}
+				}
+				if(!objectsHit)
+					collector.name = 'Deselect all';
+
+				if(collector.length > 0)
+					_aamap.history.push(collector);
+
+				_aamap.removeChild(_selectArea);
+				_selectArea = null;
+			}
+
+			// _cursorMoved == false
+			else
+			{
+				var target = Info.cursorTarget;
+
+				if(shift)
+				{
+					if(target)
+						toggleSelection(target,_aamap.history);
 				}
 				else
 				{
-					if(_selected.find(obj))
+					if(target == null && _selected.length > 0)
 					{
-						
-					}
-					else
-					{
-						_selected.each(deselect);
-						function deselect(obj:AamapObject)
-						{
-							obj.selected = false;
-						}
-						_selected = new List;
-						_selected.push(obj);
-						obj.selected = true;
-						obj.dragStart();
+						collector = new ActionsCollector('Deselect all');
+						deselectAll(collector);
+						_aamap.history.push(collector);
 					}
 				}
-
-				_selected.each(dragStart);
-				function dragStart(obj:AamapObject)
-				{
-					obj.dragStart();
-				}
 			}
 		}
 
-		override protected function objectMouseUp(obj:AamapObject,cursor:Point,keys:Object):void
+		private function toggleSelection(target:AamapObject,actionsContainer):void
 		{
+			if(_selected.find(target))
+				deselect(target,actionsContainer);
+			else
+				select(target,actionsContainer);
 		}
 
-		override protected function objectMouseMove(obj:AamapObject,cursor:Point,keys:Object):void
+		private function moveSelected(e:MouseEvent):void
 		{
-		}
+			if(!_cursorMoved)
+				_cursorMoved = true;
 
-		override public function handleKeyboard(keyList:List):void
-		{
-			// remove selected (DELETE)
-			if(keyList.find(Keyboard.DELETE))
+			_selected.each(move)
+			function move(obj)
 			{
-				removeSelected();
-			}
-
-			// select all (CTRL + A)
-			else if(keyList.find(Keyboard.CONTROL) && keyList.find(65))
-			{
-				_selected = _aamap.objects;
-
-				_selected.each(select);
-				function select(obj:AamapObject)
-				{
-					obj.selected = true;
-				}
-			}
-
-			// deselect all (CTRL + D)
-			else if(keyList.find(Keyboard.CONTROL) && keyList.find(68))
-			{
-				deselectAll();
+				obj.x = Info.snapCursor.x + obj.lastPos.x - _snapCursorStart.x;
+				obj.y = Info.snapCursor.y + obj.lastPos.y - _snapCursorStart.y;
 			}
 		}
 
-		public function removeSelected():void
+		private function releaseSelected(e:MouseEvent):void
 		{
-			if(_selected == null)
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,moveSelected);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,releaseSelected);
+			if(!_cursorMoved)
 				return;
 
-			_selected.each(remove);
-			function remove(obj:AamapObject)
-			{
-				obj.remove();
-			}
-			_selected = null;
-		}
+			_cursorMoved = false;
+			var history = _aamap.history;
 
-		// CLOSE
-		override public function close():void
-		{
-		}
-
-		private function setInfo():void
-		{
 			if(_selected.length == 1)
 			{
-				var obj = _selected.front;
-
-				if(obj is Spawn)
-				{
-					Debug.log('<Spawn x="' + obj.x + '" y="' + obj.y +
-							  '" xdir="' + obj.direction.x + '" ydir="' + obj.direction.y + '"/>');
-				}
-				else if(obj is Zone)
-				{
-					Debug.log(obj.xml);
-				}
-				else if(obj is Wall)
-				{
-					Debug.log(obj.xml);
-				}
+				moveObject(_selected.front as AamapObject,history);
 			}
 			else
 			{
-				//clear info
+				var collector = new ActionsCollector('Move objects');
+				_selected.each(move);
+				function move(object)
+				{
+					moveObject(object,collector);
+				}
+				history.push(collector);
 			}
+		}
+
+		private function moveObject(object:AamapObject,actionsContainer):void
+		{
+			var lastPos = object.lastPos;
+			var dest = new Point(object.x,object.y);
+			actionsContainer.push(new action_MoveObjectTo(object,dest,lastPos));
+		}
+
+		private function select(target:AamapObject,actionsContainer):void
+		{
+			actionsContainer.push(new action_SelectObject(_selected,target));
+		}
+		private function deselect(target:AamapObject,actionsContainer):void
+		{
+			actionsContainer.push(new action_DeselectObject(_selected,target));
+		}
+
+		private function deselectAll(actions:ActionsCollector):void
+		{
+			_selected.each(callBack);
+			function callBack(object)
+			{
+				deselect(object,actions);
+			}
+		}
+
+		private function dragStop(e:MouseEvent):void
+		{
+			close();
+		}
+
+
+		override public function close():void
+		{
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,moveSelected);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,dragStop);
+		}
+
+		override public function connect():void
+		{
+			if(_connected)
+				return;
+
+			_aamap = Home.currentMap;
+
+			if(_connections == null)
+				_connections = Config.getConnections('toolSelect');
+
+			for each(var con in _connections)
+			{
+				if(con.id == 'REMOVE_OBJECTS')
+					con.callBack = removeSelected;
+				else if(con.id == 'SELECT_ALL')
+					con.callBack = keybSelectAll;
+				else if(con.id == 'DESELECT_ALL')
+					con.callBack = keybDeselectAll;
+				else if(con.id == 'INVERT_SELECTION')
+					con.callBack = keybInvertSelection;
+
+				var toolName = con.name.substr(5);
+
+				UserEvents.connect(con);
+			}
+
+			stage.addEventListener(MouseEvent.MOUSE_DOWN,begin);
+			_connected = true;
+		}
+
+		override public function disconnect():void
+		{
+			if(!_connected)
+				return;
+
+			stage.removeEventListener(MouseEvent.MOUSE_DOWN,begin);
+
+			for each(var con in _connections)
+			{
+				UserEvents.disconnect(con);
+			}
+			keybDeselectAll();
+
+			_connected = false;
+			close();
+		}
+
+		private function removeSelected(e:* = null):void
+		{
+			if(_selected.length == 0)
+				return;
+
+			var collector = new ActionsCollector('RemoveObjects');
+
+			deselectAll(collector);
+
+			_selected.each(remove);
+			function remove(object)
+			{
+				collector.push(new action_RemoveObject(_aamap,object));
+			}
+			_aamap.history.push(collector);
+		}
+
+		private function keybSelectAll(e:* = null):void
+		{
+			if(_selected.length == _aamap.objects.length)
+				return;
+
+			var collector = new ActionsCollector('Select all');
+			_aamap.objects.each(sel);
+			function sel(object)
+			{
+				select(object,collector);
+			}
+			if(collector.length > 0)
+				_aamap.history.push(collector);
+		}
+
+		private function keybDeselectAll(e:* = null):void
+		{
+			if(_selected.length == 0)
+				return;
+
+			var collector = new ActionsCollector('Deselect all');
+			deselectAll(collector);
+			_aamap.history.push(collector);
+		}
+
+		private function keybInvertSelection(e:* = null):void
+		{
+			if(_aamap.objects.length == 0)
+				return;
+
+			var collector = new ActionsCollector('Invert selection');
+			_aamap.objects.each(toggle);
+			function toggle(object)
+			{
+				toggleSelection(object,collector);
+			}
+			_aamap.history.push(collector);
 		}
 	}
 }

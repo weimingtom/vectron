@@ -25,83 +25,104 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.SimpleButton;
-	import flash.geom.Point;
+	import flash.display.SimpleButton
+	import flash.geom.Point
 
-	import flash.events.Event;
-	import flash.events.MouseEvent;
+	import flash.events.Event
+	import flash.events.MouseEvent
 
-	import orfaust.Debug;
-	import orfaust.CustomEvent;
+	import orfaust.Debug
+	import actions.action_AddObject
+	import actions.action_WallAppend
+	import orfaust.history.ActionsCollector
 
 	public class ToolWall extends ToolBase implements ToolInterface
 	{
 		private var _wall:Wall;
 
-		override protected function mouseDown(mouse:Point,keys:Object):void
+		override protected function begin(e:MouseEvent):void
 		{
-			if(_wall == null)
-			{
-				_wall = new Wall(_aamap,null,mouse);
-				dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_wall));
+			if(!UserEvents.lockMouse())
+				return;
 
-				_wall.appendPoint(mouse);
+			stage.addEventListener(MouseEvent.MOUSE_MOVE,moveLastPoint,false,0,true);
+			stage.addEventListener(MouseEvent.MOUSE_UP,storeLastPoint,false,0,true);
+
+			_cursorStart = Info.snapCursor;
+
+			if(_wall == null || (_wall != null && _wall.vertices == 1))
+			{
+				_wall = new Wall(_aamap,null,_cursorStart);
+				_aamap.editing.addChild(_wall);
+				_wall.appendPoint(_cursorStart);
+
+				Debug.log(_aamap.editing.numChildren,'editing');
 			}
 			else
 			{
-				var last = _wall.lastPoint;
-				if(pointsEqual(mouse,last))
-				{
-					if(_wall.vertices == 0)
-						dispatchEvent(new Event('REMOVE_EDITING_OBJECT'));
-					else
-						dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
-
-					_wall = null;
-				}
-				else
-				{
-					_wall.appendPoint(mouse);
-				}
+				if(!Info.snapCursor.equals(_wall.lastPoint))
+					_wall.appendPoint(Info.snapCursor);
 			}
 		}
-		override protected function mouseUp(mouse:Point,keys:Object):void
-		{
-			if(_wall == null)
-				return;
 
-			var last = _wall.lastPoint;
-			if(pointsEqual(mouse,last))
+		private function moveLastPoint(e:MouseEvent):void
+		{
+			_wall.moveLastPoint(Info.snapCursor);
+		}
+
+		private function storeLastPoint(e:MouseEvent):void
+		{
+			if(Info.snapCursor.equals(_wall.lastPoint))
 			{
 				if(_wall.vertices > 1)
-					dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+				{
+					//_aamap.history.push(new action_AddObject(_aamap,_wall));
+				}
 				else
-					dispatchEvent(new Event('REMOVE_EDITING_OBJECT'));
+				{
+					_aamap.editing.removeChild(_wall);
+				}
 
 				_wall = null;
+				close();
 			}
 			else
-				_wall.storeLastPoint();
+			{
+				var appendAction = new action_WallAppend(_wall,Info.snapCursor);
+
+				if(_wall.vertices == 1)
+				{
+					var collector = new ActionsCollector('Create wall');
+					collector.push(new action_AddObject(_aamap,_wall));
+					collector.push(appendAction);
+
+					_aamap.history.push(collector);
+				}
+				else
+					_aamap.history.push(appendAction);
+			}
+
+			removeListeners();
+			UserEvents.unlockMouse();
 		}
-		override protected function mouseMove(mouse:Point,keys:Object):void
+
+		private function removeListeners():void
 		{
-			if(!_mouseDown || _wall == null)
-				return;
-
-			_wall.moveLastPoint(mouse);
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,moveLastPoint);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,storeLastPoint);
 		}
 
-		// CLOSE
 		override public function close():void
 		{
-			if(_wall == null)
-				return;
+			if(_wall != null)
+			{
+				_wall.storeLastPoint();
+				_aamap.history.push(new action_AddObject(_aamap,_wall));
+			}
 
-			_wall.storeLastPoint();
-			dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+			removeListeners();
 			_wall = null;
-
-			_mouseDown = false;
+			UserEvents.unlockMouse();
 		}
 	}
 }

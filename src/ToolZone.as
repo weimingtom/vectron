@@ -25,84 +25,71 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.SimpleButton;
-	import flash.geom.Point;
+	import flash.display.SimpleButton
+	import flash.geom.Point
 
-	import flash.events.Event;
-	import flash.events.MouseEvent;
+	import flash.events.Event
+	import flash.events.MouseEvent
 
-	import orfaust.Debug;
-	import orfaust.CustomEvent;
+	import orfaust.Debug
+	import actions.action_AddObject
 
 	public class ToolZone extends ToolBase implements ToolInterface
 	{
 		public var defaultRadius:Number = 50;
 
 		private var _zone:Zone;
-		private var _a:Point;
-		private var _b:Point;
+		public var effect = 'death';
 
-		override protected function mouseDown(mouse:Point,keys:Object):void
+		override protected function begin(e:MouseEvent):void
 		{
-			if(_zone != null)
-			{
-				error('newzone != null');
+			if(!UserEvents.lockMouse())
 				return;
-			}
 
-			_a = mouse;
-			_zone = new Zone(_aamap,null,_a,defaultRadius);
-			dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_zone));
+			if(_zone != null)
+				error('_zone != null');
+
+			_cursorStart = Info.snapCursor;
+			_zone = new Zone(_aamap,null,_cursorStart,defaultRadius,effect);
+			_aamap.editing.addChild(_zone);
+
+			stage.addEventListener(MouseEvent.MOUSE_MOVE,updateZone,false,0,true);
+			stage.addEventListener(MouseEvent.MOUSE_UP,addZone,false,0,true);
 		}
-		override protected function mouseUp(mouse:Point,keys:Object):void
+
+		private function updateZone(e:MouseEvent):void
 		{
+			var dist = Point.distance(_cursorStart,Info.snapCursor)
+
+			if(e.altKey)
+			{
+				var center = Point.interpolate(_cursorStart,Info.snapCursor,.5);
+				var radius = dist / 2;
+			}
+			else
+			{
+				center = _cursorStart;
+				radius = dist;
+			}
+			_zone.moveCenter(center);
+			_zone.radius = radius;
+		}
+
+		private function addZone(e:MouseEvent):void
+		{
+			if(_zone == null)
+				error('_zone == null');
+
+			_aamap.history.push(new action_AddObject(_aamap,_zone));
 			close();
 		}
-		override protected function mouseMove(mouse:Point,keys:Object):void
-		{
-			if(!_mouseDown)
-				return;
 
-			if(_zone == null)
-			{
-				error('mouseDown but _zone == null');
-				return;
-			}
-
-			_b = mouse;
-
-			if(keys.alt)
-			{
-				var xDest = (_a.x + _b.x) / 2;
-				var yDest = (_a.y + _b.y) / 2;
-
-				var center = new Point(xDest,yDest);
-				var radius = getDistance(_a,_b) / 2;
-
-				_zone.moveCenter(center);
-				_zone.radius = radius;
-			}
-			else
-			{
-				_zone.moveCenter(_a);
-				_zone.changeRadius(_b);
-			}
-		}
-
-		// CLOSE
 		override public function close():void
 		{
-			if(_zone == null)
-				return;
-
-			_mouseDown = false;
-
-			if(_zone.radius == 0)
-				dispatchEvent(new Event('REMOVE_EDITING_OBJECT'));
-			else
-				dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
-
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,updateZone);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,addZone);
 			_zone = null;
+			UserEvents.unlockMouse();
 		}
 	}
 }

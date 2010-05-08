@@ -35,16 +35,18 @@ package
 
 	import orfaust.Debug;
 	import orfaust.CustomEvent;
-	import orfaust.containers.List;
+	import orfaust.containers.LinkedList;
+	import orfaust.history.History
 
 	public class Aamap extends Base
 	{
 		private var _xml:XML;
 		private var _field:XML;
-
 		private var _editing:Sprite;
-
 		private var _axes:uint = 4;
+		private const ZOOM_FACTOR = .95;
+
+		private var _history:History = new History;
 
 		public function Aamap(xml:String):void
 		{
@@ -55,6 +57,11 @@ package
 			addChild(_editing);
 		}
 
+		public function get history():History
+		{
+			return _history;
+		}
+
 		public function get editing():Sprite
 		{
 			return _editing;
@@ -62,6 +69,9 @@ package
 
 		override protected function init():void
 		{
+			scaleY = -1;
+			x = _sw / 2;
+			y = _sh / 2;
 		}
 
 		public function get xml():XML
@@ -105,7 +115,7 @@ package
 
 /* objects creation */
 
-		private var _objects:List = new List;
+		private var _objects:LinkedList = new LinkedList;
 
 		public function addObject(obj:AamapObject):void
 		{
@@ -140,19 +150,9 @@ package
 			_objects.remove(obj);
 		}
 
-		public function get objects():List
+		public function get objects():LinkedList
 		{
-			//return a clone of _objects to keep the list private
-
-			var list = new List;
-			var it = _objects.iterator;
-			while(!it.end)
-			{
-				list.push(it.data);
-				it.next();
-			}
-
-			return list;
+			return _objects;
 		}
 
 		private function createObjects():void
@@ -161,19 +161,19 @@ package
 
 			for each(var s in _field.Spawn)
 			{
-				drawSpawn(s);
+				createSpawn(s);
 			}
 			for each(var z in _field.Zone)
 			{
-				drawZone(z);
+				createZone(z);
 			}
 			for each(var w in _field.Wall)
 			{
-				drawWall(w);
+				createWall(w);
 			}
 		}
 
-		private function drawSpawn(xml:XML):void
+		private function createSpawn(xml:XML):void
 		{
 			var xPos = parseFloat(xml.attribute('x'));
 			var yPos = parseFloat(xml.attribute('y'));
@@ -187,7 +187,7 @@ package
 			addObject(spawn);
 		}
 
-		private function drawZone(xml:XML):void
+		private function createZone(xml:XML):void
 		{
 			var effect = xml.attribute('effect');
 			var shape = xml.ShapeCircle;
@@ -198,7 +198,7 @@ package
 			addObject(zone);
 		}
 
-		private function drawWall(xml:XML):void
+		private function createWall(xml:XML):void
 		{
 			var wallHeight = xml.attribute('height');
 
@@ -224,6 +224,48 @@ package
 		public function get axes():uint
 		{
 			return _axes;
+		}
+
+
+
+
+
+/* zoom */
+
+		public function zoomIn():void
+		{
+			if(scaleX > 100)
+				return;
+
+			var factor = scaleX;
+			Info.scale /= ZOOM_FACTOR;
+
+			setScale();
+			factor = scaleX - factor;
+
+			x -= Info.cursor.x * factor;
+			y -= -Info.cursor.y * factor;
+		}
+
+		public function zoomOut():void
+		{
+			if(scaleX < .05)
+				return;
+
+			var factor = scaleX;
+			Info.scale *= ZOOM_FACTOR;
+
+			setScale();
+			factor -= scaleX;
+
+			x += Info.cursor.x * factor;
+			y += -Info.cursor.y * factor;
+		}
+
+		private function setScale():void
+		{
+			scaleX = Info.scale;
+			scaleY = -Info.scale;
 		}
 	}
 }

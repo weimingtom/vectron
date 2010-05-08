@@ -25,46 +25,29 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.SimpleButton;
-	import flash.geom.Point;
+	import flash.events.MouseEvent
+	import flash.ui.Keyboard
+	import flash.geom.Point
 
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-
-	import flash.ui.Keyboard;
-
-	import orfaust.Debug;
-	import orfaust.containers.List;
+	import orfaust.Debug
+	import orfaust.containers.LinkedList
+	import orfaust.history.*
+	import actions.*
 
 	public class ToolEdit extends ToolBase implements ToolInterface
 	{
-		override protected function mouseDown(mouse:Point,keys:Object):void
+		override protected function begin(e:MouseEvent):void
 		{
-		}
-		override protected function mouseUp(mouse:Point,keys:Object):void
-		{
-		}
-		override protected function mouseMove(mouse:Point,keys:Object):void
-		{
+			if(UserEvents.mouseLocked)
+				return;
+
+			_cursorStart = Info.cursor;
+			var target = Info.cursorTarget;
 		}
 
-		override protected function objectMouseDown(obj:AamapObject,cursor:Point,keys:Object):void
-		{
-		}
 
-		override protected function objectMouseUp(obj:AamapObject,cursor:Point,keys:Object):void
-		{
-		}
 
-		override protected function objectMouseMove(obj:AamapObject,cursor:Point,keys:Object):void
-		{
-		}
 
-		override public function handleKeyboard(keyList:List):void
-		{
-		}
-
-		// CLOSE
 		override public function close():void
 		{
 		}

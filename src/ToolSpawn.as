@@ -25,53 +25,44 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.SimpleButton;
-	import flash.geom.Point;
+	import flash.display.SimpleButton
+	import flash.geom.Point
 
-	import flash.events.Event;
-	import flash.events.MouseEvent;
+	import flash.events.Event
+	import flash.events.MouseEvent
 
-	import orfaust.Debug;
-	import orfaust.CustomEvent;
+	import orfaust.Debug
+	import actions.action_AddObject
 
 	public class ToolSpawn extends ToolBase implements ToolInterface
 	{
 		private var _spawn:Spawn;
 
-		override protected function mouseDown(mouse:Point,keys:Object):void
+		override protected function begin(e:MouseEvent):void
 		{
+			if(!UserEvents.lockMouse())
+				return;
+
 			if(_spawn != null)
-			{
-				error('new spawn != null');
-				return;
-			}
+				error('_spawn != null');
 
-			_spawn = new Spawn(_aamap,null,mouse);
-			dispatchEvent(new CustomEvent('ADD_EDITING_OBJECT',_spawn));
+			_cursorStart = Info.snapCursor;
+			_spawn = new Spawn(_aamap,null,_cursorStart);
+			_aamap.editing.addChild(_spawn);
+
+			stage.addEventListener(MouseEvent.MOUSE_MOVE,updateDirection,false,0,true);
+			stage.addEventListener(MouseEvent.MOUSE_UP,addSpawn,false,0,true);
 		}
-		override protected function mouseUp(mouse:Point,keys:Object):void
-		{
-			close();
-		}
-		override protected function mouseMove(mouse:Point,keys:Object):void
-		{
-			if(!_mouseDown)
-				return;
 
-			if(_spawn == null)
-			{
-				error('mouseDown but _spawn == null');
-				return;
-			}
-
+		private function updateDirection(e:MouseEvent):void
+		{
 			var axes = _aamap.axes;
 
 			// get mouse cursor's distance from spawn's center
-			var xDist = mouse.x - _spawn.x;
-			var yDist = mouse.y - _spawn.y;
+			var diff = Info.cursor.subtract(_cursorStart);
 
 			// get the real angle in radians
-			var rad = Math.atan2(yDist,xDist);
+			var rad = Math.atan2(diff.y,diff.x);
 
 			// add half axes portion for better interaction
 			// i.e. let the arrow follow the mouse cursor
@@ -98,15 +89,19 @@ package
 			_spawn.direction = new Point(xDir,yDir);
 		}
 
-		// CLOSE
+		private function addSpawn(e:MouseEvent):void
+		{
+			_aamap.history.push(new action_AddObject(_aamap,_spawn));
+			close();
+		}
+
+
 		override public function close():void
 		{
-			if(_spawn == null)
-				return;
-
-			_mouseDown = false;
-			dispatchEvent(new Event('EDITING_OBJECT_COMPLETE'));
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,updateDirection);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,addSpawn);
 			_spawn = null;
+			UserEvents.unlockMouse();
 		}
 	}
 }

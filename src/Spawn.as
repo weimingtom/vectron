@@ -95,12 +95,12 @@ package
 			_area.graphics.lineTo(10,0);
 			_area.graphics.lineTo(5,-5);
 
-			graphics.lineStyle(2,COLOR,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
-			graphics.moveTo(0,0);
-			graphics.lineTo(10,0);
-			graphics.moveTo(5,5);
-			graphics.lineTo(10,0);
-			graphics.lineTo(5,-5);
+			_draw.graphics.lineStyle(2,COLOR,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			_draw.graphics.moveTo(0,0);
+			_draw.graphics.lineTo(10,0);
+			_draw.graphics.moveTo(5,5);
+			_draw.graphics.lineTo(10,0);
+			_draw.graphics.lineTo(5,-5);
 		}
 	}
 }

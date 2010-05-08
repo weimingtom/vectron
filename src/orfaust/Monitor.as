@@ -67,7 +67,7 @@ package orfaust
 		}
 		private function onClock(e:TimerEvent):void
 		{
-			var usedRam = System.totalMemory / (1024 * 1024);
+			var usedRam = System.totalMemory / (1024);
 			_ram.text = 'RAM ' + int(usedRam).toString();
 			_ram.setTextFormat(_textFormat);
 		}

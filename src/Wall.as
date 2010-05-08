@@ -33,12 +33,11 @@ package
 	import flash.display.JointStyle;
 
 	import orfaust.Debug;
-	import orfaust.containers.List;
-	import orfaust.containers.Iterator;
+	import orfaust.containers.LinkedList;
 
 	public class Wall extends AamapObject implements AamapObjectInterface
 	{
-		private var _points:List = new List;
+		private var _points:LinkedList = new LinkedList;
 		private var _lastSeg:Object;
 		private var _wallHeight:Number;
 
@@ -78,7 +77,7 @@ package
 			var segment:Sprite = new Sprite;
 			addChild(segment);
 
-			var a = _points.back;
+			var a = _points.front;
 			var b = new Point(mouse.x,mouse.y);
 
 			_lastSeg = {a:a,b:b,sprite:segment};
@@ -101,9 +100,23 @@ package
 			render();
 		}
 
+		public function removeLastSeg():void
+		{
+			if(_lastSeg != null && this.contains(_lastSeg.sprite))
+			{
+				this.removeChild(_lastSeg.sprite);
+				_lastSeg = null;
+			}
+		}
+
 		public function get lastPoint():Point
 		{
-			return _points.back;
+			return _points.front as Point;
+		}
+
+		public function removeLastPoint():void
+		{
+			_points.pop();
 		}
 
 		public function renderLastSeg():void
@@ -132,6 +145,24 @@ package
 
 			_xml.setChildren(new XML('<Point/>'));
 
+			_points.each(createXml);
+			function createXml(p:Point)
+			{
+				if(p == _points.back)
+				{
+					_xml.Point.@x = x + p.x;
+					_xml.Point.@y = y + p.y;
+				}
+				else
+				{
+					var point = new XML('<Point/>');
+					point.@x = x + p.x;
+					point.@y = y + p.y;
+					_xml.appendChild(point);
+				}
+			}
+
+			/*
 			var it = _points.iterator;
 
 			_xml.Point.@x = x + it.data.x;
@@ -146,6 +177,7 @@ package
 				_xml.appendChild(point);
 				it.next();
 			}
+			*/
 		}
 
 
@@ -155,40 +187,45 @@ package
 
 		override public function render():void
 		{
-			// draw selectable area
-
-			var it:Iterator = _points.iterator;
-
-			_area.graphics.clear();
-			_area.graphics.lineStyle(SIZE_SELECTED,COLOR_SELECTED,1,false,LineScaleMode.NONE);
-			_area.graphics.moveTo(it.data.x,it.data.y);
-
-			it.next();
-
-			while(!it.end)
+			_points.each(drawSelectable);
+			function drawSelectable(p:Point)
 			{
-				_area.graphics.lineTo(it.data.x,it.data.y);
-				it.next();
+				if(p == _points.back)
+				{
+					_area.graphics.clear();
+					_area.graphics.lineStyle(SIZE_SELECTED,COLOR_SELECTED,1,false,LineScaleMode.NONE);
+					_area.graphics.moveTo(p.x,p.y);
+				}
+				else
+				{
+					_area.graphics.lineTo(p.x,p.y);
+				}
 			}
 
-			// draw visible object
-			var jit = _points.iterator;
-
-			graphics.lineStyle(2,0,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
-			graphics.moveTo(jit.data.x,jit.data.y);
-
-			jit.next();
-
-			while(!jit.end)
+			_points.each(drawVisible);
+			function drawVisible(p:Point)
 			{
-				graphics.lineTo(jit.data.x,jit.data.y);
-				jit.next();
+				if(p == _points.back)
+				{
+					_draw.graphics.clear();
+					_draw.graphics.lineStyle(2,0,1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+					_draw.graphics.moveTo(p.x,p.y);
+				}
+				else
+				{
+					_draw.graphics.lineTo(p.x,p.y);
+				}
 			}
 		}
 
 		public function get vertices():uint
 		{
 			return _points.length;
+		}
+
+		public function get points():LinkedList
+		{
+			return _points;
 		}
 
 		public function set wallHeight(val:Number):void

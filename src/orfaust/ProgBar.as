@@ -25,14 +25,31 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package orfaust
 {
-	import flash.display.MovieClip;
+	import flash.display.MovieClip
+	import flash.events.Event
+	import flash.events.ProgressEvent
 
-	public class ProgBar extends MovieClip
+	public class ProgBar extends SelfInit
 	{
-		public function setProgress(loaded:Number,total:Number)
+		public function setProgress(e:ProgressEvent):void
 		{
-			var ratio = loaded / total;
+			var ratio = e.bytesLoaded / e.bytesTotal;
 			part.scaleX = ratio;
+		}
+
+		override public function show():void
+		{
+			part.scaleX = 0;
+			visible = true;
+		}
+
+		override protected function onStageResize(e:Event):void
+		{
+			if(!visible)
+				return;
+
+			x = _sw / 2 - width / 2;
+			y = _sh / 2 - height / 2;
 		}
 	}
 }

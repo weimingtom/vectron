@@ -25,124 +25,96 @@ along with Vectron.  If not, see <http://www.gnu.org/licenses/>.
 
 package
 {
-	import flash.display.MovieClip;
-	import flash.display.Sprite;
+	import flash.display.MovieClip
 
-	import flash.geom.Point;
+	import flash.events.Event
+	import flash.events.MouseEvent
+	import flash.events.KeyboardEvent
+	import flash.ui.Keyboard
 
-	import flash.events.Event;
-	import flash.events.MouseEvent;
-	import flash.events.ProgressEvent;
-	import flash.events.KeyboardEvent;
-	import flash.ui.Keyboard;
+	import flash.geom.Point
 
-	import flash.net.FileReference;
-
-	import orfaust.Debug;
-	import orfaust.CustomEvent;
-	import orfaust.containers.List;
+	import orfaust.Debug
+	import orfaust.Segment
+	import orfaust.Circle
 
 	public class Home extends Base
 	{
-		private var _aamap:Aamap;
-
-		private var _tool:ToolInterface;
-		private static var _pointer:MovieClip;
-		private static var _snapToGrid:Boolean = true;
-
-		public static function get mapCursor():Point
-		{
-			return _cursor;
-		}
-		public static function set snapToGrid(val:Boolean)
-		{
-			_snapToGrid = val;
-		}
+		private var _snapToGrid:Boolean = true;
 
 		override protected function init():void
 		{
+			super.loadUrl('xml/config.xml',configLoaded);
+
 			pointer.visible = false;
-			_pointer = pointer;
-
-			// testing urls to load external maps
-
-			//var xmlUrl = 'aamap.php?url=';
-
-			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/Crossdeath-1.0.1.aamap.xml';
-			//xmlUrl += 'resource.armagetronad.net/resource/ZURD/race/ecdmazed-1.aamap.xml';
-			//xmlUrl += 'resource.armagetronad.net/resource/hoop/motorace/tester-0.1.aamap.xml';
-			//xmlUrl += 'resource.armagetronad.net/resource/hoop/race/alba-1.6.aamap.xml';
-			//xmlUrl += 
-
-			//var xmlUrl = 'aamap/default-1.0.1.aamap.xml';
-			var xmlUrl = 'aamap/vectron-1.0.1.aamap.xml';
-
 			Zone.init();
-
-			stage.addEventListener(Event.RESIZE,onStageResize,false,0,true);
-			onStageResize(null);
-
-			infoHandler.addEventListener(MouseEvent.MOUSE_DOWN,handleInfoSize,false,0,true);
-			infoHandler.addEventListener(MouseEvent.MOUSE_UP,handleInfoSize,false,0,true);
-			infoHandler.addEventListener(MouseEvent.ROLL_OVER,infoHandlerHover,false,0,true);
-			infoHandler.addEventListener(MouseEvent.ROLL_OUT,infoHandlerHover,false,0,true);
-			infoHandler.addEventListener(MouseEvent.MOUSE_MOVE,infoHandlerHover,false,0,true);
-
-			toolBar.tools.addEventListener(MouseEvent.CLICK,onToolClick,false,0,true);
-			toolBar.addEventListener(MouseEvent.ROLL_OVER,breakToolEvents,false,0,true);
-			toolBar.addEventListener(MouseEvent.ROLL_OUT,breakToolEvents,false,0,true);
-
-			info.addEventListener(MouseEvent.ROLL_OVER,breakToolEvents,false,0,true);
-			info.addEventListener(MouseEvent.ROLL_OUT,breakToolEvents,false,0,true);
-			infoHandler.addEventListener(MouseEvent.ROLL_OVER,breakToolEvents,false,0,true);
-			infoHandler.addEventListener(MouseEvent.ROLL_OUT,breakToolEvents,false,0,true);
-
-			_tool = toolBar.tools.select;
-
-			stage.addEventListener(KeyboardEvent.KEY_DOWN,handleKeyboard,false,0,true);
-			stage.addEventListener(KeyboardEvent.KEY_UP,handleKeyboard,false,0,true);
-
-			super.loadUrl(xmlUrl,initMap,loadingProgress);
 		}
 
-		private var _infoHandlerMouseDown:Boolean = false;
-		private const INFO_MAX_WIDTH = 230;
-
-		import flash.geom.Rectangle;
-
-		private function handleInfoSize(e:MouseEvent):void
+		private function configLoaded(e:Event):void
 		{
-			if(e.type == MouseEvent.MOUSE_DOWN)
-				infoHandler.startDrag(false,new Rectangle(0,0,INFO_MAX_WIDTH,0));
-			else
-				infoHandler.stopDrag();
+			Config.init(e.target.data);
+			toolBar.connect();
+
+			var aamapUrl = 'aamap/vectron-1.0.aamap.xml';
+			progBar.show();
+			super.loadUrl(aamapUrl,initMap,progBar.setProgress);
 		}
-		private function infoHandlerHover(e:MouseEvent):void
+
+
+/* Aamap */
+
+		private static var _currentMap:Aamap;
+		public static function get currentMap():Aamap
+		{
+			return _currentMap;
+		}
+
+		private function initMap(e:Event):void
+		{
+			progBar.hide();
+
+			try
+			{
+				_currentMap = new Aamap(e.target.data);
+			}
+			catch(e)
+			{
+				Debug.log(e);
+				return;
+			}
+			mapContainer.addChild(_currentMap);
+
+			stage.addEventListener(KeyboardEvent.KEY_DOWN,UserEvents.handleKeyboard);
+			stage.addEventListener(KeyboardEvent.KEY_UP,UserEvents.handleKeyboard);
+
+			stage.addEventListener(MouseEvent.MOUSE_DOWN,begin);
+			stage.addEventListener(MouseEvent.MOUSE_MOVE,setInfo);
+
+			stage.addEventListener(MouseEvent.MOUSE_WHEEL,zoom);
+
+			_currentMap.addEventListener(MouseEvent.ROLL_OVER,showSelectPointer,true);
+			_currentMap.addEventListener(MouseEvent.ROLL_OUT,hideSelectPointer);
+
+			grid.size = new Point(10,10);
+			//grid.visible = false;
+			grid.render(_currentMap);
+
+			toolBar.active.connect();
+		}
+
+		private function showSelectPointer(e:MouseEvent):void
 		{
 			pointer.visible = true;
-			pointer.gotoAndStop(2);
-
-			if(e.type == MouseEvent.ROLL_OVER || e.type == MouseEvent.MOUSE_MOVE)
-			{
-				infoMask.width = infoHandler.x;
-				pointer.x = stage.mouseX;
-				pointer.y = stage.mouseY;
-			}
+			if(e.target is SelectableArea)
+				Info.cursorTarget = e.target.parent as AamapObject;				
 			else
-			{
-				pointer.visible = false;
-			}
+				Info.cursorTarget = e.target as AamapObject;
 		}
-
-
-
-
-
-		public static function get pointer():MovieClip
+		private function hideSelectPointer(e:MouseEvent):void
 		{
-			return _pointer;
+			pointer.visible = false;
+			Info.cursorTarget = null;
 		}
-
 
 
 /* zoom */
@@ -150,405 +122,70 @@ package
 		private function zoom(e:MouseEvent):void
 		{
 			if(e.delta > 0)
-				zoomIn();
+				_currentMap.zoomIn();
 			else
-				zoomOut();
-		}
+				_currentMap.zoomOut();
 
-		private const ZOOM_FACTOR = .95;
-		private var _scale = 1;
-		private static var _cursor:Point = new Point(0,0);
-
-		private function zoomIn():void
-		{
-			if(_scale > 50)
-				return;
-
-			var factor = _scale;
-			_scale /= ZOOM_FACTOR;
-
-			setScale();
-			factor = _scale - factor;
-
-			_aamap.x -= _cursor.x * factor;
-			_aamap.y -= -_cursor.y * factor;
-
+			grid.render(_currentMap);
 			setInfo();
-			grid.render(_aamap);
-		}
-		private function zoomOut():void
-		{
-			if(_scale < .05)
-				return;
-
-			var factor = _scale;
-			_scale *= ZOOM_FACTOR;
-
-			setScale();
-			factor -= _scale;
-
-			_aamap.x += _cursor.x * factor;
-			_aamap.y += -_cursor.y * factor;
-
-			setInfo();
-			grid.render(_aamap);
 		}
 
-		private function setScale():void
+		private function setInfo(e:MouseEvent = null):void
 		{
-			_aamap.scaleX = _scale;
-			_aamap.scaleY = -_scale;
-		}
+			pointer.x = stage.mouseX;
+			pointer.y = stage.mouseY;
 
-		private function setInfo():void
-		{
-			_cursor.x = (stage.mouseX - _aamap.x) / _scale;
-			_cursor.y = (-stage.mouseY + _aamap.y) / _scale;
+			var xCursor = (stage.mouseX - _currentMap.x) / _currentMap.scaleX;
+			var yCursor = (stage.mouseY - _currentMap.y) / _currentMap.scaleY;
 
-			snapPointer.visible = _snapToGrid;
 			if(_snapToGrid)
 			{
-				var xSnap = Math.floor((_cursor.x + grid.size.x / 2) / grid.size.x);
-				var ySnap = Math.floor((_cursor.y + grid.size.y / 2) / grid.size.y);
+				var gridSize = grid.size;
 
-				_cursor.x = xSnap * grid.size.x;
-				_cursor.y = ySnap * grid.size.y;
+				var xSnap = Math.floor((xCursor + gridSize.x / 2) / gridSize.x) * gridSize.x;
+				var ySnap = Math.floor((yCursor + gridSize.y / 2) / gridSize.y) * gridSize.y;
 
-				snapPointer.x = _aamap.x + _cursor.x * _aamap.scaleX;
-				snapPointer.y = _aamap.y + _cursor.y * _aamap.scaleY;
-			}
+				snapPointer.x = _currentMap.x + xSnap * _currentMap.scaleX;
+				snapPointer.y = _currentMap.y + ySnap * _currentMap.scaleY;
 
-			info.txt.text =
-				'x: ' + _cursor.x.toString() + '\n' + 
-				'y: ' + (_cursor.y).toString() + '\n' +
-				'zoom: ' + Math.floor(_scale * 100).toString() + '%';
-		}
-
-
-
-
-/* tools */
-
-		private function breakToolEvents(e:MouseEvent):void
-		{
-			if(e.type == 'rollOver')
-			{
-				removeMapListeners();
-				_tool.close();
-				snapPointer.visible = false;
+				Info.snapCursor = new Point(xSnap,ySnap);
 			}
 			else
 			{
-				addMapListeners();
+				snapPointer.x = _currentMap.x + Info.cursor.x * Info.scale;
+				snapPointer.y = _currentMap.y - Info.cursor.y * Info.scale;
+				Info.snapCursor = new Point(xCursor,yCursor);
 			}
+
+			Info.cursor = new Point(xCursor,yCursor);
 		}
 
-		private function onToolClick(e:MouseEvent):void
+
+
+/* drag map */
+
+		private function begin(e:MouseEvent):void
 		{
-			switchTool(e.target);
-		}
-
-		private function switchTool(selected:*):void
-		{
-			if(selected == _tool || selected == toolBar || selected == toolBar.overlay)
-				return;
-
-			pointer.visible = false;
-
-			_tool.close();
-			removeToolListeners();
-
-			_tool = selected;
-			toolBar.overlay.x = toolBar.tools.x + selected.x;
-			addToolListeners();
-		}
-
-		private function addToolListeners():void
-		{
-			_tool.addEventListener('ADD_EDITING_OBJECT',addEditingObject,false,0,true);
-			_tool.addEventListener('EDITING_OBJECT_COMPLETE',editingObjectComplete,false,0,true);
-			_tool.addEventListener('REMOVE_EDITING_OBJECT',removeEditingObject,false,0,true);
-
-			if(_tool == toolBar.tools.select)
+			if(UserEvents.keyIsDown(Keyboard['SPACE']))
 			{
-				_aamap.addEventListener(MouseEvent.MOUSE_DOWN,handleObjectMouseEvent,false,0,true);
-				_aamap.addEventListener(MouseEvent.MOUSE_UP,handleObjectMouseEvent,false,0,true);
-				_aamap.addEventListener(MouseEvent.MOUSE_MOVE,handleObjectMouseEvent,false,0,true);
-				_aamap.addEventListener('OBJECT_ROLL_OVER',handleObjectHover,false,0,true);
-				_aamap.addEventListener('OBJECT_ROLL_OUT',handleObjectHover,false,0,true);
+				if(!UserEvents.lockMouse())
+					return;
+
+				_currentMap.startDrag();
+				stage.addEventListener(MouseEvent.MOUSE_MOVE,updateGrid);
+				stage.addEventListener(MouseEvent.MOUSE_UP,end);
 			}
 		}
-
-		private function removeToolListeners():void
+		private function end(e:MouseEvent):void
 		{
-			_tool.removeEventListener('ADD_EDITING_OBJECT',addEditingObject);
-			_tool.removeEventListener('EDITING_OBJECT_COMPLETE',editingObjectComplete);
-			_tool.removeEventListener('REMOVE_EDITING_OBJECT',removeEditingObject);
-
-			if(_tool == toolBar.tools.select)
-			{
-				_aamap.removeEventListener(MouseEvent.MOUSE_DOWN,handleObjectMouseEvent);
-				_aamap.removeEventListener(MouseEvent.MOUSE_UP,handleObjectMouseEvent);
-				_aamap.removeEventListener(MouseEvent.MOUSE_MOVE,handleObjectMouseEvent);
-				_aamap.removeEventListener('OBJECT_ROLL_OVER',handleObjectHover);
-				_aamap.removeEventListener('OBJECT_ROLL_OUT',handleObjectHover);
-			}
+			stage.removeEventListener(MouseEvent.MOUSE_MOVE,updateGrid);
+			stage.removeEventListener(MouseEvent.MOUSE_UP,end);
+			_currentMap.stopDrag();
+			UserEvents.unlockMouse();
 		}
-
-
-
-
-
-
-/* map */
-
-		private function initMap(e:Event):void
+		private function updateGrid(e:MouseEvent):void
 		{
-			progBar.visible = false;
-
-			try
-			{
-				_aamap = new Aamap(e.target.data);
-			}
-			catch(e)
-			{
-				Debug.log(e);
-				return;
-			}
-
-			mapContainer.addChild(_aamap);
-			_aamap.scaleY = -1;
-
-			_aamap.x = _sW / 2;
-			_aamap.y = _sH / 2;
-
-			addToolListeners();
-			addMapListeners();
-			stage.addEventListener(MouseEvent.MOUSE_WHEEL,zoom,false,0,true);
-
-			toolBar.save.addEventListener(MouseEvent.CLICK,saveXml,false,0,true);
-			toolBar.del.addEventListener(MouseEvent.CLICK,removeSelected,false,0,true);
-
-			grid.size = new Point(10,10);
-			grid.render(_aamap);
-
-			setInfo();
-		}
-
-
-		private function removeSelected(e:MouseEvent):void
-		{
-			toolBar.tools.select.removeSelected();
-		}
-
-		private function saveXml(e:MouseEvent):void
-		{
-			Debug.clear();
-			Debug.log('\n' + _aamap.xml);
-		}
-
-
-
-
-
-		private function addMapListeners():void
-		{
-			stage.addEventListener(MouseEvent.MOUSE_DOWN,handleStageMouseEvent,false,0,true);
-			stage.addEventListener(MouseEvent.MOUSE_UP,handleStageMouseEvent,false,0,true);
-			stage.addEventListener(MouseEvent.MOUSE_MOVE,handleStageMouseEvent,false,0,true);
-		}
-		private function removeMapListeners():void
-		{
-			stage.removeEventListener(MouseEvent.MOUSE_DOWN,handleStageMouseEvent);
-			stage.removeEventListener(MouseEvent.MOUSE_UP,handleStageMouseEvent);
-			stage.removeEventListener(MouseEvent.MOUSE_MOVE,handleStageMouseEvent);
-		}
-
-
-
-
-/* editing */
-
-		private var _draggingMap:Boolean = false;
-
-		private function handleStageMouseEvent(e:MouseEvent):void
-		{
-			// drag map
-			if(e.ctrlKey && e.type != MouseEvent.MOUSE_MOVE && !_tool.objectDragging || _draggingMap)
-			{
-				switch(e.type)
-				{
-					case MouseEvent.MOUSE_DOWN:
-						_aamap.startDrag();
-						_draggingMap = true;
-						_pointer.visible = false;
-						break;
-
-					case MouseEvent.MOUSE_UP:
-						_aamap.stopDrag();
-						_draggingMap = false;
-						break;
-
-					case MouseEvent.MOUSE_MOVE:
-						grid.render(_aamap);
-						break;
-				}
-			}
-
-			else
-			{
-				if(e.type == MouseEvent.MOUSE_MOVE)
-				{
-					pointer.x = stage.mouseX;
-					pointer.y = stage.mouseY;
-				}
-				_tool.handleMouse(e,_aamap);
-			}
-
-			setInfo();
-		}
-
-		private function handleObjectMouseEvent(e:MouseEvent):void
-		{
-			_tool.handleObjectMouseEvent(e,_cursor);
-		}
-
-		private function handleObjectHover(e:CustomEvent):void
-		{
-			_tool.handleObjectMouseHover(e);
-		}
-
-
-		// KEYBOARD
-		private var _keyDown:List = new List;
-
-		private function handleKeyboard(e:KeyboardEvent):void
-		{
-			//Debug.log(e.keyCode);
-			var ch = e.keyCode;
-
-			switch(e.type)
-			{
-				case KeyboardEvent.KEY_DOWN:
-					if(!_keyDown.find(ch))
-						_keyDown.push(ch);
-
-					if(!e.ctrlKey && !e.altKey && ! e.shiftKey)
-						shortCuts(ch);
-
-					break;
-
-				case KeyboardEvent.KEY_UP:
-					if(_keyDown.find(ch))
-						_keyDown.remove(ch);
-
-					break;
-			}
-			_tool.handleKeyboard(_keyDown);
-		}
-
-		private function shortCuts(ch):void
-		{
-			switch(ch)
-			{
-				case 65:	// A -> edit tool
-					switchTool(toolBar.tools.edit);
-					break;
-
-				case 83:	// S -> spawn tool
-					switchTool(toolBar.tools.spawn);
-					break;
-
-				case 86:	// V -> select tool
-					switchTool(toolBar.tools.select);
-					break;
-
-				case 87:	// W -> wall tool
-					switchTool(toolBar.tools.wall);
-					break;
-
-				case 90:	// Z -> zone tool
-					switchTool(toolBar.tools.zone);
-					break;
-			}
-		}
-
-
-
-/* tool listeners */
-
-		private function addEditingObject(e:CustomEvent):void
-		{
-			if(_aamap.editing.numChildren != 0)
-				error('editing is not empty');
-			else
-			{
-				_aamap.editing.addChild(e.data);
-			}
-		}
-		private function editingObjectComplete(e:Event):void
-		{
-			if(_aamap.editing.numChildren == 0)
-				error('editing is empty');
-
-			else if(_aamap.editing.numChildren > 1)
-				error('editing contains more than 1 object');
-
-			else
-			{
-				var obj = _aamap.editing.getChildAt(0);
-				_aamap.addObject(obj);
-			}
-		}
-		private function removeEditingObject(e:Event):void
-		{
-			if(_aamap.editing.numChildren == 0)
-				error('editing is empty');
-
-			else if(_aamap.editing.numChildren > 1)
-				error('editing contains more than 1 object');
-
-			else
-			{
-				var obj = _aamap.editing.getChildAt(0);
-				_aamap.editing.removeChild(obj);
-			}
-		}
-
-		private function objectDragStart(e:CustomEvent):void
-		{
-			var obj = e.data as AamapObject;
-			obj.startDrag();
-		}
-
-		private function objectDragStop(e:CustomEvent):void
-		{
-			var obj = e.data as AamapObject;
-			obj.stopDrag();
-		}
-
-
-
-/* loading */
-
-		// LOADING PROGRESS
-		private function loadingProgress(e:ProgressEvent):void
-		{
-			progBar.setProgress(e.bytesLoaded,e.bytesTotal);
-		}
-
-
-/* resize */
-
-		private function onStageResize(e:Event):void
-		{
-			toolBar.x = _sW;
-
-			if(progBar.visible)
-			{
-				progBar.x = _sW / 2 - progBar.width / 2;
-				progBar.y = _sH / 2 - progBar.height / 2;
-			}
+			grid.render(_currentMap);
 		}
 	}
 }

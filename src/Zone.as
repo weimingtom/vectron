@@ -33,7 +33,6 @@ package
 	import flash.display.JointStyle;
 
 	import orfaust.Debug;
-	import orfaust.Utils;
 
 	public class Zone extends AamapObject implements AamapObjectInterface
 	{
@@ -46,9 +45,9 @@ package
 
 		public static function init():void
 		{
-			zoneColor['death'] = Utils.getColor(1,0,0);
-			zoneColor['win'] = Utils.getColor(0,1,0);
-			zoneColor['fortress'] = Utils.getColor(0,0,1);
+			zoneColor['death'] = 0xFF0000;
+			zoneColor['win'] = 0x00FF00;
+			zoneColor['fortress'] = 0x0000FF;
 		}
 
 		public function Zone(aamap:Aamap,xml:XML,center:Point,rad:Number,effect:String = DEFAULT_EFFECT):void
@@ -105,9 +104,9 @@ package
 			_area.graphics.lineStyle(SIZE_SELECTED,COLOR_SELECTED,1,false,LineScaleMode.NONE);
 			_area.graphics.drawCircle(_center.x,_center.y,_radius);
 
-			graphics.clear();
-			graphics.lineStyle(2,zoneColor[_effect],1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
-			graphics.drawCircle(_center.x,_center.y,_radius);
+			_draw.graphics.clear();
+			_draw.graphics.lineStyle(2,zoneColor[_effect],1,false,LineScaleMode.NONE,CapsStyle.NONE,JointStyle.MITER);
+			_draw.graphics.drawCircle(_center.x,_center.y,_radius);
 		}
 
 		public function get center():Point
